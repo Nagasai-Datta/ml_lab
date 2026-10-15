@@ -1,0 +1,8 @@
+== paired tests in idea 9 (difference, 95% CI half-width, p) ==
+/runs/H6_dense/mc_minus_q                                                -0.433 ± 0.155  p=0.0054  n=5
+/runs/H6_sparse/mc_minus_q                                               -0.609 ± 0.307  p=0.0177  n=5
+/runs/H12_dense/mc_minus_q                                               -0.028 ± 0.091  p=0.5731  n=5
+/runs/H12_sparse/mc_minus_q                                              -0.812 ± 0.376  p=0.0133  n=5
+/runs/H24_dense/mc_minus_q                                               +0.055 ± 0.032  p=0.0272  n=5
+/runs/H24_sparse/mc_minus_q                                              -0.703 ± 0.339  p=0.0154  n=5
+saved out/idea09/defence_dashboard.png

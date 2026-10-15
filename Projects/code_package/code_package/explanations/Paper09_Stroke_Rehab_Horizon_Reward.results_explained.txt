@@ -1,0 +1,668 @@
+7. Results
+7.1 Dense weekly reward
+Table 3. True-simulator return with the dense (weekly) reward (800 logged episodes, 5 replicates, 95% CI; rule and
+oracle are single policies). An asterisk marks a learner significantly above the rule and a dagger one significantly below it,
+using the t-widened interval.
+    Method                                  H=6                             H = 12                          H = 24
+    Fatigue-band rule                        4.23                            5.42                            7.90
+    DP on estimated MDP                  6.96 ± 0.27*                    9.89 ± 0.63*                    12.40 ± 0.54*
+    Monte Carlo control                  5.60 ± 0.47*                    9.83 ± 0.65*                    14.85 ± 0.64*
+    Q-learning                           6.92 ± 0.26*                    9.72 ± 0.66*                    12.88 ± 0.73*
+    Oracle DP (10x data)                     7.53                           12.62                            19.72
+
+
+Table 3 shows that with a dense reward every learner beats the rule at every horizon: all 9 of 9 learner-
+horizon combinations are significantly above it, by 1.37 to 6.95 units. The oracle DP, fitted to 8,000
+episodes, is far higher still (7.53, 12.62 and 19.72 against the rule's 4.23, 5.42 and 7.90), so the
+achievable headroom grows with the horizon (3.3, 7.2 and 11.8 units). At six weeks DP and Q-learning
+are close (6.96 and 6.92) and MC is lower (5.60 ± 0.47); the DP-minus-MC difference of 1.36 has an
+interval half-width of 0.76 (unpaired approximation). At twelve weeks the three are indistinguishable
+
+                                       Rehabilitation horizon and sparse reward | Page 5
+(DP 9.89, MC 9.83, Q-learning 9.72). At 24 weeks the order has reversed: MC scores 14.85 against
+12.40 for DP and 12.88 for Q-learning, +2.44 ± 1.19 relative to DP and +1.97 ± 1.37 relative to Q-
+learning. Model-free MC is therefore the weakest learner at the shortest horizon and the strongest at the
+longest. A plausible reading is that the model-based solvers (DP and Q-learning on samples from the
+fitted model) inherit model error that compounds over more weeks, while MC with a dense reward uses
+the sampled returns directly; the data here do not test that.
+Table 4. Share c(π) of the oracle's improvement over the rule captured by each learner in the true simulator (Eq. 4). For
+sparse rewards the oracle is below the rule at H = 6 and 12, so c is undefined there. Negative values mean the learner is
+below the rule.
+ Learner                      H = 6 (dense)            H = 12 (dense)           H = 24 (dense)       H = 24 (sparse)
+ DP on estimated MDP              83%                       62%                      38%                  -74%
+ Monte Carlo control              42%                       61%                      59%                 -841%
+ Q-learning                       82%                       60%                      42%                 -725%
+
+
+Table 4 turns the same numbers into a measure that is comparable across horizons. DP captures 83%,
+62% and 38% of the headroom at 6, 12 and 24 weeks and Q-learning 82%, 60% and 42%: both capture a
+smaller share as the horizon grows, even though the average number of logged transitions per state is the
+same (44). MC does not follow this pattern (42%, 61%, 59%). The unexplained part of the headroom is
+largest at 24 weeks, where the oracle is 11.8 units above the rule and the best learner (MC) is 4.9 units
+short of it. The logs support few off-rule pairs (about 2.8 visits per pair on average), and the oracle's
+advantage comes in part from actions the small data cannot support; this explanation is based on the
+logging arithmetic and not tested by varying the data.
+7.2 Sparse terminal reward
+Table 5. True-simulator return with the sparse (terminal) reward (800 logged episodes, 5 replicates, 95% CI). The
+asterisk and dagger have the same meaning as in Table 3.
+ Method                                     H=6                            H = 12                      H = 24
+ Fatigue-band rule                          4.15                            5.20                        7.31
+ DP on estimated MDP                     4.20 ± 0.28                     4.17 ± 0.91                 5.95 ± 1.43
+ Monte Carlo control                    0.98 ± 1.83†                    -7.52 ± 0.26†               -8.07 ± 0.65†
+ Q-learning                              4.70 ± 0.47                    3.82 ± 0.35†                -5.94 ± 1.25†
+ Oracle DP (10x data)                       3.91                            3.66                        9.13
+
+
+Table 5 shows a very different picture. No learner is significantly above the rule in any of the 9
+combinations; 5 are significantly below it and 4 cannot be distinguished from it. DP stays close to the
+rule at six and twelve weeks (4.20 ± 0.28 and 4.17 ± 0.91 against 4.15 and 5.20) but with a much wider
+interval than in the dense case, and Q-learning is +0.55 ± 0.67 from the rule at six weeks (not
+distinguishable) and significantly below at twelve (-1.37) and 24 weeks (-13.25). MC is below the rule at
+every horizon (-3.17, -12.72 and -15.38 units) and at 24 weeks is also well below DP (-14.0). At 24
+weeks DP (5.95 ± 1.43) is 11.9 units above Q-learning (-5.94), so Q-learning on the fitted model does not
+converge to the DP solution of that model within 250,000 steps when the reward is terminal and the
+horizon is long.
+The oracle DP is the sharpest result. Even with 8,000 episodes its sparse-reward policy is 0.23 below the
+rule at 6 weeks (3.91 against 4.15) and 1.54 below at 12 weeks (3.66 against 5.20), and only at 24 weeks
+is it above (+1.83). With ten times the data and an exact solver, the dense formulation reaches far above
+the rule in every configuration (Table 3), so the failure under the sparse reward is not only a matter of
+sample size or of how the learner assigns credit. Something in the sparse formulation misleads the
+planner itself. The code suggests the hidden-history term of Eq. (6) as a candidate (the reward depends
+on the initial score, which the state does not contain); we did not test it, and other explanations, such as
+the way the terminal reward interacts with the unsupported-pair rule, cannot be excluded.
+
+
+
+                                     Rehabilitation horizon and sparse reward | Page 6
+Figure 1. True-simulator return at H = 12 with the sparse reward (single replicate set; 95% CI over 5 replicates; rule and
+oracle are single policies).
+
+Figure 1 shows the twelve-week case. MC's return is -7.52 ± 0.26, negative on a scale where the rule
+scores 5.20. A negative return means the average course ends with a lower score than it started with, and
+the total gain column of the summary confirms it (-7.95 points per course against 5.49 for the rule). The
+interval of MC is narrow (±0.26), so this is a stable property of MC's policies under the sparse reward in
+all 5 replicates and not a single bad run. The consistency across horizons (0.98, -7.52, -8.07) is also in
+line with a variance explanation: first-visit MC assigns the same terminal number, discounted, to every
+state-action pair in an episode, and that number contains the initial-score spread (standard deviation 8.1)
+that is larger than the effect of any one week; this is a standard property of Monte Carlo returns [2] but
+we did not isolate it by experiment.
+7.3 Horizon, reward type and learning on the fitted model
+Table 6. Final normalised value v(π) on the oracle model after 250,000 steps (0 is the logged behaviour, 1 the model
+optimum; 5 replicates, 95% CI), the paired MC-minus-Q-learning difference and the number of replicates reaching 90%
+of the optimum.
+ Configuration              Q-learning final v           MC final v            MC − Q-learning         Reached 90% (Q /
+                                                                                    (paired)                 MC)
+ H = 6, dense                  0.71 ± 0.08               0.27 ± 0.13        -0.43 ± 0.15 (p = 0.005)       0/5 / 0/5
+ H = 12, dense                 0.51 ± 0.07               0.48 ± 0.07        -0.03 ± 0.09 (p = 0.573)       0/5 / 0/5
+ H = 24, dense                 0.31 ± 0.02               0.37 ± 0.05           +0.05 ± 0.03 (p =           0/5 / 0/5
+                                                                                     0.027)
+ H = 6, sparse                  0.48 ± 0.18             -0.13 ± 0.24        -0.61 ± 0.31 (p = 0.018)       0/5 / 0/5
+ H = 12, sparse                 0.04 ± 0.27             -0.77 ± 0.35        -0.81 ± 0.38 (p = 0.013)       0/5 / 0/5
+ H = 24, sparse                -1.81 ± 0.38             -2.51 ± 0.29        -0.70 ± 0.34 (p = 0.015)       0/5 / 0/5
+
+
+Table 6 reports learning on the fitted model. No run reached the 90% target: 0 of 60 runs did, so t90 is
+undefined everywhere (the steps-to-90% figure in the code output is empty for that reason). The best
+final normalised value is +0.71 (Q-learning, H = 6, dense). Q-learning's final value falls with the horizon
+under both reward types (0.71, 0.51, 0.31 for dense; 0.48, 0.04, -1.81 for sparse), and MC's does not
+follow a monotone pattern under dense rewards (0.27, 0.48, 0.37). Under sparse rewards 4 of 6 learner-
+horizon values are negative: the greedy policy is worse than the logged behaviour on the very model it
+was trained on, and 3 of the 12 values (both reward types) are significantly below zero. These policies
+are worse than the logged behaviour on the very model they were trained against, which is a failure of the
+learners on the model scale, although given the oracle result above the model scale itself is not a reliable
+guide under sparse rewards. MC minus Q-learning is significantly negative in all three sparse
+configurations (p = 0.018, 0.013, 0.015), and under the dense reward it is significantly negative at H = 6
+(-0.43), not significant at H = 12 (p = 0.573) and significantly positive at H = 24 (+0.05), the same
+reversal as in the true-simulator returns.
+
+
+
+
+                                      Rehabilitation horizon and sparse reward | Page 7
+Figure 2. Normalised learning curves at H = 12 (mean ± s.d. over 5 replicates). 0 is the logged behaviour and 1 the
+oracle-model optimum.
+
+Figure 2 shows the contrast at twelve weeks. With the dense reward both learners rise to about the same
+plateau within a few tens of thousands of steps and stay below the optimum (final values 0.51 for Q-
+learning and 0.48 for MC). With the sparse reward Q-learning rises more slowly and ends near the
+behaviour policy (0.04 ± 0.27), while MC settles below it (-0.77 ± 0.35). Both start far below zero
+because the first greedy policy, from an all-zero value table, is poor. The plateaus are reached early and
+do not move, so more environment steps would not change the picture within the fitted model, which
+suggests that the limit is what the model and the reward formulation can support and not training time.
+
+
+
+
+Figure 3. Final normalised value against the treatment horizon, dense (left) and sparse (right) reward (mean ± 95% CI
+over 5 replicates).
+
+Figure 3 summarises the horizon effect. Under dense rewards the normalised value of Q-learning falls
+steadily from 0.71 at six weeks to 0.31 at 24 weeks, with non-overlapping intervals at the ends, while
+MC dips at the short horizon and recovers. Under sparse rewards the values are lower throughout and fall
+much faster (Q-learning from 0.48 to -1.81), so the horizon penalty is much larger when the reward is
+terminal: the 24-week sparse values (-1.81 for Q-learning and -2.51 for MC) are more than one oracle-
+model improvement unit below the behaviour policy. The interaction of horizon and sparsity is the main
+quantitative result of the study: the loss from a longer horizon is modest under a dense reward and severe
+under a sparse one.
+7.4 Injuries and policies
+Table 7. Injury weeks per course in the true simulator (a week counts as an injury week when fatigue exceeds 0.85 and
+the intensity is moderate or high; a course has H weeks; 5 replicates, 95% CI).
+ Method              dense H = 6    dense H = 12      dense H = 24       sparse H = 6   sparse H = 12   sparse H = 24
+ Fatigue-band rule      0.41            0.94              1.93               0.41           0.94            1.93
+ DP on estimated     0.10 ± 0.05     0.39 ± 0.08       1.27 ± 0.14        0.58 ± 0.14    1.45 ± 0.38     2.64 ± 0.74
+ MDP
+ Monte Carlo         0.19 ± 0.06     0.35 ± 0.11       0.88 ± 0.14        1.70 ± 0.65    6.07 ± 0.11     9.52 ± 0.24
+
+
+
+                                    Rehabilitation horizon and sparse reward | Page 8
+ control
+ Q-learning          0.10 ± 0.05      0.41 ± 0.10      1.19 ± 0.13        0.44 ± 0.19    1.66 ± 0.18      8.47 ± 0.57
+ Oracle DP (10x         0.02             0.05             0.31               1.03           2.14             1.68
+ data)
+
+
+
+Table 7 shows the safety side. With dense rewards the learned policies have fewer injury weeks than the
+rule in all 9 of 9 combinations (significantly so using the t-widened interval); for example at twelve
+weeks the rule has 0.94 and DP 0.39, and the oracle only 0.05. With sparse rewards the picture reverses:
+5 of 9 combinations have significantly more injury weeks than the rule and 0 fewer. MC's policies are the
+extreme: 1.70, 6.07 and 9.52 injury weeks per course at 6, 12 and 24 weeks, that is 28%, 51% and 40%
+of all weeks, against 0.41, 0.94 and 1.93 for the rule. Even the sparse-reward oracle has 2.14 injury
+weeks at H = 12 against 0.94 for the rule. The injury penalty is a one-off 2.5 points in the week it occurs,
+which is smaller than the gain that high intensity can provide, so a policy that ignores injury risk is not
+obviously suboptimal under either reward in the true objective; a plausible reading is that the dense
+learners reduce injuries as a by-product of maximising the total gain, because injured weeks lose gain,
+and that the sparse learners do not because they receive no signal about which week an injury happened
+(not tested).
+
+
+
+
+Figure 4. Intensity chosen in each state observed in the data (H = 12, dense reward, replicate 0). States are sorted by
+score band, fatigue band and week.
+
+
+
+
+Figure 5. The same for the sparse reward.
+
+Figures 4 and 5 show the policies for the first replicate at twelve weeks. In both, the behaviour policy
+(top row) follows the rule's stripes by fatigue band. With the dense reward the learned policies depart
+from it in many cells and the oracle chooses rest in broad blocks of states, which fits its very low injury
+rate (0.05). With the sparse reward the learners choose high intensity (yellow) in cells where the
+behaviour policy picks lighter therapy, most visibly for MC, in line with its 6.07 injury weeks per course;
+the sparse oracle departs from the rule in fewer places and keeps more high-intensity cells than the dense
+oracle. These are visual readings of the figures for one replicate; the policies are not stored numerically
+in the results file.
+
+
+                                    Rehabilitation horizon and sparse reward | Page 9
+8. Discussion
+What the study shows. (1) With a weekly reward, standard learners improve on a fatigue-band rule at
+every horizon (9 of 9 combinations significantly above it), but capture a decreasing share of the
+achievable improvement as the horizon grows (DP 83% to 38%). (2) With a terminal reward, none is
+significantly above the rule, 5 of 9 are significantly below it, and MC's policies are severely worse and
+unsafe. (3) The oracle with ten times the data is also below the rule at 6 and 12 weeks under the sparse
+reward, so the failure is not only a sample-size effect. (4) On the fitted model no run reached 90% of the
+optimum (0 of 60), and Q-learning's final value declines with the horizon.
+Why sparse rewards fail here. The dense and sparse returns are the same quantity up to discounting.
+For the rule the sparse return divided by the total gain is 0.9752, 0.9464, 0.8911 at 6, 12 and 24 weeks
+against 0.9752, 0.9464, 0.8911 for gamma^(H−1), so the true objectives agree to floating-point precision
+(largest difference 2e-16). The difference is therefore informational: a dense reward tells the learner
+which week contributed the gain, while a terminal reward gives one noisy number per course. Three
+mechanisms are plausible and not mutually exclusive: variance of the terminal return for MC; slow value
+propagation for Q-learning over long horizons; and the hidden-history term of Eq. (6) in the model,
+which would affect DP as well. The pattern of results is consistent with all three (MC worst, Q-learning
+intermediate and DP the least affected of the learners, yet the oracle also failing at shorter horizons), but
+the experiment does not separate them, and the oracle failure is the observation that most needs an
+explanation.
+What it does not show. It does not show that horizon alone is harmful: the share captured by MC at 24
+weeks (59%) is higher than at six (42%). It does not isolate why the sparse oracle fails. It does not show
+that a particular reward is right clinically: the weekly gain is a score change and the injury penalty is
+invented. And, because the summaries stored in results.json have no per-replicate values, it relies on
+interval-based comparisons between learners rather than paired tests (except for the stored MC-minus-Q-
+learning test).
+Practical use. A programme designer who can observe interim progress should use it: when a terminal
+outcome is the only signal, the experiments suggest checking the learned policy against the existing rule
+before anything else, and preferring a model-based solver to Monte Carlo returns. A sparse-reward
+pipeline should also report an oracle-style check (the same method with much more data), because a
+failure of that check points to the formulation and not to the learner.
+
+9. Limitations and threats to validity
+   Few replicates and stored summaries. 5 replicates (t-interval factor 1.42); results.json stores means
+    and intervals but not per-replicate values, so paired tests against the rule are not available and the
+    comparisons use stored intervals. Learning curves, policies and agreement are available only as
+    figures.
+   One replicate in the policy figures. The policy maps show the first replicate at H = 12 and cannot
+    be generalised to the averages.
+   Hidden-history hypothesis untested. Eq. (6) is a reading of the code. We did not construct a variant
+    whose state contains the initial score or the progress so far, which would be the direct test.
+   Rule is a single policy. The rule's return has no replicate variation, so differences from the rule are
+    judged by the learner's interval only.
+   Invented dynamics and penalties. The gain, fatigue and injury equations, and the 2.5-point injury
+    penalty, are chosen by hand; different values could change which reward type is easier.
+   Simulated, not clinical, evidence. All numbers come from stylised simulators written for this study.
+    They demonstrate how the algorithms behave when the ground truth is known; they say nothing
+    about the safety or benefit of any treatment in people.
+
+
+
+                                 Rehabilitation horizon and sparse reward | Page 10
+   State aggregation. Continuous physiology is discretised into bands. Banding makes the process only
+    approximately Markov, and part of the gap between the DP policy on the estimated model and the
+    true optimum is a modelling gap rather than a sampling gap.
+   Fixed-horizon episodes treated as stationary. Episodes end after a fixed number of steps but the
+    state does not always contain the clock, so the estimated model treats termination as a constant
+    hazard. This distorts absolute model values (not true-simulator scores) and is why model-based value
+    estimates are compared only on a common oracle model.
+   Behaviour policy. The logged data come from a single ε-noisy rule. Coverage of non-rule actions is
+    therefore thin, which is exactly the offline-RL situation, and results depend on that coverage.
+   Hand-set hyper-parameters. ε schedules, step sizes and the support threshold were fixed in
+    advance and not tuned per paper.
+
+10. Ethical considerations and future work
+Ethics. No human data were used, so no consent or privacy issues arise in this study. If the method were
+applied to real records, three safeguards would be essential: de-identification and governance approval of
+the source data; a clinician-in-the-loop design in which the learned policy is advisory, with hard
+guardrails on unsafe actions; and prospective, randomised or at least carefully monitored evaluation
+before any deployment. Reinforcement learning from logs inherits the biases of the clinicians who
+produced them, and may under-serve groups that are under-represented in the data; subgroup
+performance should be reported alongside averages.
+Future work. (1) Add the initial score or the accumulated improvement to the state and test whether the
+sparse-reward oracle then beats the rule; (2) add a potential-based shaped reward with a partial signal and
+measure how much of the gap closes; (3) vary the amount of logged data at each horizon to separate
+coverage from compounding error; (4) store per-replicate returns so that paired tests against the rule are
+possible; (5) apply the adapter to a real rehabilitation table, where interim functional scores would define
+the dense reward.
+
+11. Conclusion
+In a simulated stroke-rehabilitation programme, DP, MC and Q-learning trained on 800 logged courses
+were significantly above a fatigue-band rule at 6, 12 and 24 weeks when rewarded weekly (by 1.4 to 6.9
+units), but captured a share of the oracle's headroom that fell with the horizon for DP and Q-learning
+(83% to 38% for DP). With a terminal reward none was significantly above the rule, MC was far below it
+with up to 9.5 injury weeks per course, and the oracle DP was below the rule at 6 and 12 weeks, even
+though the two rewards define almost the same true objective. These are simulator results, not clinical
+evidence, and the reasons for the sparse-reward failure remain hypotheses.
+
+Appendix A. Anticipated reviewer questions
+The following questions are the ones a reviewer or examiner is most likely to raise. Each answer is tied
+to a number or figure produced by the code.
+Q1. If dense and sparse rewards are the same objective, why do the results differ so much?
+    They are the same in the true process (the rule's sparse return over its total gain is 0.9464 against
+    gamma^11 = 0.9464 at H = 12), but not in what can be estimated: a terminal reward provides one
+    noisy number per course, and the model's last-week reward includes a hidden-history term (Eq. 6).
+    The results show the difference but do not isolate which mechanism produces it.
+Q2. Why is the oracle DP below the rule under the sparse reward?
+    It scores 3.91 and 3.66 against 4.15 and 5.20 at 6 and 12 weeks, with 2.14 injury weeks at 12. With
+    ten times the data and an exact solver, a sample-size explanation does not apply, which points to the
+    formulation. We offered the hidden-history term as a candidate but did not test it.
+
+                                Rehabilitation horizon and sparse reward | Page 11
+Q3. Does a longer horizon hurt learning?
+   For DP and Q-learning under a dense reward the share of headroom captured falls (83%, 62%, 38%
+   for DP) and Q-learning's normalised value falls (0.71 to 0.31); for MC it does not. Under a sparse
+   reward the decline is much steeper (0.48 to -1.81 for Q-learning).
+Q4. Is MC just a worse algorithm?
+   Not uniformly. It is the weakest learner at six weeks under a dense reward (5.60 against 6.96 for DP)
+   and the strongest at 24 weeks (14.85 against 12.40), and it is far worse than the others under a sparse
+   reward.
+Q5. Can these results guide a real rehabilitation programme?
+   No. The dynamics, the injury rule and the penalty are invented; the study asks how reward design
+   and horizon affect learning algorithms, and finds that a terminal-only reward is a hazard even when
+   the true objective is unchanged.
+Q6. Why were no run able to reach 90% of the optimal improvement?
+   Under the dense reward the best final normalised value is 0.71; the fitted model has few supported
+   off-rule pairs (about 2.8 visits per pair with 800 episodes), so the learned policy plausibly cannot
+   adopt many actions the optimum uses (not tested). The plateaus in Figure 2 are reached early, so
+   more steps would not change this.
+
+Appendix B. Reproducibility
+All results in this paper are produced by `python ideas.py 9` (shared library: rl_core.py, domains.py,
+common.py). Random seeds are fixed in the code, so a re-run reproduces every table and figure. Figure
+files generated by the script: fig_agreement_dense, fig_agreement_sparse, fig_bars_dense,
+fig_bars_sparse,      fig_curves_h12,       fig_horizon,      fig_learning_dense,      fig_learning_sparse,
+fig_policies_dense, fig_policies_sparse, fig_steps90. To repeat the study on a real Kaggle table, convert
+it with kaggle_adapter.transitions_from_dataframe, then call build_mdp, value_iteration, mc_control and
+q_learning exactly as the script does; because a real table has no simulator, report model-based estimates
+on a held-out split and label them as estimates.
+
+Appendix C. Source code of the experiment
+For completeness the exact source of the simulator and the experiment function is reproduced below; it is
+the same code that produced every number and figure in this paper (the shared solvers value_iteration,
+mc_control and q_learning are in rl_core.py and are delivered with the code package).
+Rehab
+    class Rehab(Domain):
+        name = "rehab"
+        nA, gamma, max_steps = 4, 0.995, 12
+        info_keys = ["gain", "injury"]
+        SE = [15, 30, 42, 52, 60]
+        FE = [0.35, 0.7]
+        nS = 6 * 3 * 12
+        action_labels = ["rest", "light", "moderate", "high"]
+        GAIN = [0.5, 1.5, 3.0, 4.5]
+        FAT = [-0.35, -0.10, 0.15, 0.40]
+
+         def __init__(self, sparse=False, H=12):
+             self.sparse = sparse
+             self.max_steps = H
+             self.nS = 6 * 3 * H
+
+        def _s(self):
+            return (band(self.score, self.SE) * 3 + band(self.fat, self.FE)) *
+    self.max_steps + self.t
+
+
+
+                                Rehabilitation horizon and sparse reward | Page 12
+        def reset(self, rng):
+            self.score = float(rng.uniform(12, 40))
+            self.s0 = self.score
+            self.fat, self.t = float(rng.uniform(0, 0.4)), 0
+            return self._s()
+
+        def step(self, a, rng):
+            g = self.GAIN[a] * (1 - self.score / 66.0) * (1.1 - self.fat) + rng.normal(0,
+    0.4)
+              fat = float(np.clip(self.fat + self.FAT[a] + rng.normal(0, 0.07), 0, 1))
+              inj = float(fat > 0.85 and a >= 2)
+              if inj: g -= 2.5
+              old = self.score
+              self.score = float(np.clip(self.score + g, 0, 66))
+              self.fat, self.t = fat, self.t + 1
+              done = self.t >= self.max_steps
+              gain = self.score - old
+              r = gain if not self.sparse else ((self.score - self.s0) if done else 0.0)
+              return self._s() if not done else 0, r, done, dict(gain=gain, injury=inj), 1
+
+        def rule(self, s):
+            fb = (s // self.max_steps) % 3
+            return 1 if fb == 2 else (2 if fb == 1 else 3)
+
+
+ideas.idea9
+    def idea9():
+        I = 9; d = odir(I)
+        HS = [6, 12, 24]; R = {}
+        for H in HS:
+            for sp in (False, True):
+                 dom = Rehab(sparse=sp, H=H)
+                 r = standard_benchmark(dom, n_eps=800, n_oracle=8000, steps=250000,
+    seeds=5, n_eval=250)
+                 R[(H, sp)] = (r, dom)
+                 if H == 12:
+                     standard_figs(r, dom, I, tag="_sparse" if sp else "_dense",
+    title=f"Rehabilitation, H={H}, {'sparse' if sp else 'dense'} reward")
+        summ = {}
+        fig, axs = plt.subplots(1, 2, figsize=(8.0, 3.2), sharey=True)
+        for ax, sp in zip(axs, (False, True)):
+            r, _ = R[(12, sp)]
+            beh = float(np.mean(r["methods"]["Behavior"]["Jor"])); opt =
+    r["J_oracle_model"]["Oracle DP"]
+            for nm in ("Monte Carlo", "Q-learning"):
+                 x, mu, sd = curve_mean(r["curves"][nm]); y = (mu - beh) / (opt - beh); s_ =
+    sd / (opt - beh)
+                 ax.plot(x, y, color=COL[nm], label=nm, lw=1.8); ax.fill_between(x, y - s_,
+    y + s_, color=COL[nm], alpha=0.15)
+            ax.axhline(1, color="k", ls="--", lw=0.8); ax.set_title("Sparse (terminal)
+    reward" if sp else "Dense (weekly) reward", fontsize=9)
+            ax.set_xlabel("Environment steps")
+        axs[0].set_ylabel("Normalised value (0 = therapist behaviour, 1 = DP optimum)");
+    axs[0].legend(fontsize=7)
+        fig.savefig(f"{d}/fig_curves_h12.png"); plt.close(fig)
+        t90 = {}; fin = {}
+        for (H, sp), (r, dom) in R.items():
+            beh = float(np.mean(r["methods"]["Behavior"]["Jor"])); opt =
+    r["J_oracle_model"]["Oracle DP"]
+            for nm in ("Monte Carlo", "Q-learning"):
+                 t90[(H, sp, nm)] = steps_to_fraction(r["curves"][nm], beh + 0.9 * (opt -
+    beh))
+                 fin[(H, sp, nm)] = [float((c[-1][1] - beh) / (opt - beh)) for c in
+    r["curves"][nm]]
+        fig, axs = plt.subplots(1, 2, figsize=(8.0, 3.2))
+        for ax, sp in zip(axs, (False, True)):
+            for nm in ("Monte Carlo", "Q-learning"):
+                 ax.errorbar(HS, [np.mean(fin[(H, sp, nm)]) for H in HS], yerr=[ci95(fin[(H,
+    sp, nm)]) for H in HS], marker="o", color=COL[nm], capsize=2, label=nm)
+            ax.set_xticks(HS); ax.set_xlabel("Treatment horizon H (weeks)");
+    ax.set_title("Sparse reward" if sp else "Dense reward", fontsize=9)
+        axs[0].set_ylabel("Normalised value after 250k steps"); axs[0].legend(fontsize=7)
+        fig.savefig(f"{d}/fig_horizon.png"); plt.close(fig)
+
+
+                             Rehabilitation horizon and sparse reward | Page 13
+        fig, ax = plt.subplots(figsize=(5.2, 3.2))
+        lab = [f"H={H}\n{'sparse' if sp else 'dense'}" for H in HS for sp in (False, True)]
+        for i, nm in enumerate(("Monte Carlo", "Q-learning")):
+            ax.bar(np.arange(len(lab)) + (i - 0.5) * 0.38, [np.nanmean(t90[(H, sp, nm)]) /
+    1000 if np.isfinite(np.nanmean(t90[(H, sp, nm)])) else 0 for H in HS for sp in (False,
+    True)], 0.38, color=COL[nm], label=nm)
+        ax.set_xticks(range(len(lab))); ax.set_xticklabels(lab, fontsize=7);
+    ax.set_ylabel("Steps (thousands) to 90% of optimum\n(0 = never reached)");
+    ax.legend(fontsize=7)
+        fig.savefig(f"{d}/fig_steps90.png"); plt.close(fig)
+        for (H, sp), (r, dom) in R.items():
+            beh = float(np.mean(r["methods"]["Behavior"]["Jor"])); opt =
+    r["J_oracle_model"]["Oracle DP"]
+            summ[f"H{H}_{'sparse' if sp else 'dense'}"] = dict(
+                summary=summarize(r), t90={nm: [None if np.isnan(x) else float(x) for x in
+    t90[(H, sp, nm)]] for nm in ("Monte Carlo", "Q-learning")},
+                reach={nm: float(np.mean(~np.isnan(t90[(H, sp, nm)]))) for nm in ("Monte
+    Carlo", "Q-learning")},
+                final={nm: dict(mean=float(np.mean(fin[(H, sp, nm)])), ci=ci95(fin[(H, sp,
+    nm)])) for nm in ("Monte Carlo", "Q-learning")},
+                Jopt=opt, Jbeh=beh, mc_minus_q=paired(fin[(H, sp, "Monte Carlo")], fin[(H,
+    sp, "Q-learning")]))
+        save_json(I, "results", dict(runs=summ, HS=HS))
+        return summ
+
+
+rl_core: shared solvers
+    def build_mdp(data, dom, weights=None, chan=None, min_n=10, term_prior=1.0):
+        """Empirical (maximum-likelihood) MDP from logged transitions.
+        (s,a) pairs observed fewer than min_n times are completed pessimistically: they go
+        to the absorbing terminal state with the worst reward seen in the data."""
+        nS, nA = dom.nS, dom.nA
+        T = nS
+        w = np.ones(len(data["s"])) if weights is None else np.asarray(weights, float)
+        s, a = data["s"], data["a"]
+        s2 = np.where(data["done"] > 0, T, data["s2"])
+        N = np.zeros((nS + 1, nA, nS + 1))
+        np.add.at(N, (s, a, s2), w)
+        n = N.sum(2)
+        Rsum = np.zeros((nS + 1, nA))
+        np.add.at(Rsum, (s, a), w * data["r"])
+        Gsum = np.zeros((nS + 1, nA, nS + 1))
+        np.add.at(Gsum, (s, a, s2), w * dom.gamma ** data["dur"])
+        m = MDP()
+        m.nS, m.nA, m.gamma = nS, nA, dom.gamma
+        m.n = n
+        m.N = N
+        seen = n >= min_n           # support constraint: thinly observed (s,a) are
+    completed pessimistically
+        n_eff = n + term_prior        # one pseudo-observation of absorption guards against
+    'immortal' loops
+        P = np.zeros_like(N)
+        P[seen] = N[seen] / n_eff[seen][:, None]
+        P[seen, T] += term_prior / n_eff[seen]
+        G = np.full_like(N, dom.gamma)
+        nz = N > 0
+        G[nz] = Gsum[nz] / N[nz]
+        R = np.zeros((nS + 1, nA))
+        R[seen] = Rsum[seen] / n_eff[seen]
+        rmin = float(data["r"].min())
+        m.rmin, m.rmax = rmin, float(data["r"].max())
+        P[~seen, T] = 1.0
+        R[~seen] = rmin
+        P[T, :, :] = 0.0
+        P[T, :, T] = 1.0
+        R[T, :] = 0.0
+        m.P, m.G, m.R = P, G, R
+        m.PG = P * G
+        # reward channels
+        m.Rc = {}
+        for c in (chan if chan is not None else dom.chan):
+            cs = np.zeros((nS + 1, nA))
+            np.add.at(cs, (s, a), w * data[c])
+
+
+                            Rehabilitation horizon and sparse reward | Page 14
+       cr = np.zeros((nS + 1, nA))
+       cr[seen] = cs[seen] / n_eff[seen]
+       m.Rc[c] = cr
+   # start distribution = first state of every episode
+   first = data["t"] == 0
+   mu = np.bincount(data["s"][first], minlength=nS + 1).astype(float)
+   m.mu = mu / mu.sum()
+   m.visits = (n * seen).sum(1)[:nS]
+   m.seen = seen
+   m.Rsum = Rsum
+   return m
+
+
+def value_iteration(m, R=None, mask=None, tol=1e-9, max_iter=20000, penalty=None):
+    R = m.R if R is None else R
+    if penalty is not None:
+        R = R - penalty
+    V = np.zeros(m.nS + 1)
+    for _ in range(max_iter):
+        Q = _q(m, V, R)
+        if mask is not None:
+            Q = np.where(mask, Q, -1e18)
+        Vn = Q.max(1)
+        Vn[m.nS] = 0.0
+        if np.abs(Vn - V).max() < tol:
+            V = Vn
+            break
+        V = Vn
+    Q = _q(m, V, R)
+    if mask is not None:
+        Q = np.where(mask, Q, -1e18)
+    pi = Q.argmax(1)[:m.nS]
+    return pi, V, Q
+
+
+def q_learning(m, rng, steps, eps_fn=eps_exp, alpha0=1.0, alpha_min=0.02,
+                q0=0.0, mask=None, n_ckpt=25, max_len=200, ckpt_fn=None):
+    nS, nA = m.nS, m.nA
+    ckpt_fn = ckpt_fn or (lambda p: J(m, p))
+    Q = np.full((nS + 1, nA), q0)
+    Q[nS] = 0.0
+    cnt = np.zeros((nS + 1, nA))
+    smp = Sampler(m, rng)
+    ck = np.unique(np.linspace(0, steps, n_ckpt + 1).astype(int))
+    curve = []
+    s, ep_t = smp.start(), 0
+    ci = 0
+    for k in range(steps + 1):
+        if ci < len(ck) and k == ck[ci]:
+            pi = np.array([_greedy(Q, x, mask) for x in range(nS)])
+            curve.append((k, ckpt_fn(pi)))
+            ci += 1
+        if k == steps:
+            break
+        if rng.random() < eps_fn(k, steps):
+            a = _explore(rng, s, nA, mask)
+        else:
+            a = _greedy(Q, s, mask)
+        s2, r, g = smp.step(s, a)
+        tgt = r + (0.0 if s2 == nS else g * Q[s2].max() if mask is None
+                    else g * np.where(mask[s2], Q[s2], -1e18).max())
+        cnt[s, a] += 1
+        al = max(alpha_min, alpha0 / (1.0 + cnt[s, a] ** 0.7))
+        Q[s, a] += al * (tgt - Q[s, a])
+        ep_t += 1
+        if s2 == nS or ep_t >= max_len:
+            s, ep_t = smp.start(), 0
+        else:
+            s = s2
+    pi = np.array([_greedy(Q, x, mask) for x in range(nS)])
+    return pi, Q, np.array(curve)
+
+
+def mc_control(m, rng, steps, eps_fn=eps_exp, q0=0.0, mask=None, n_ckpt=25,
+               max_len=200, ckpt_fn=None):
+
+
+                       Rehabilitation horizon and sparse reward | Page 15
+          """first-visit Monte Carlo control with epsilon-soft behaviour policy and
+          incremental-average updates."""
+          nS, nA = m.nS, m.nA
+          ckpt_fn = ckpt_fn or (lambda p: J(m, p))
+          Q = np.full((nS + 1, nA), q0)
+          Q[nS] = 0.0
+          N = np.zeros((nS + 1, nA))
+          smp = Sampler(m, rng)
+          ck = np.unique(np.linspace(0, steps, n_ckpt + 1).astype(int))
+          curve = []
+          used, ci = 0, 0
+          while True:
+              while ci < len(ck) and used >= ck[ci]:
+                  pi = np.array([_greedy(Q, x, mask) for x in range(nS)])
+                  curve.append((ck[ci], ckpt_fn(pi)))
+                  ci += 1
+              if used >= steps:
+                  break
+              s = smp.start()
+              traj = []
+              for _ in range(max_len):
+                  if rng.random() < eps_fn(used + len(traj), steps):
+                      a = _explore(rng, s, nA, mask)
+                  else:
+                      a = _greedy(Q, s, mask)
+                  s2, r, g = smp.step(s, a)
+                  traj.append((s, a, r, g))
+                  s = s2
+                  if s2 == nS:
+                      break
+              used += len(traj)
+              # returns, backwards; first-visit
+              Gret = 0.0
+              rets = []
+              for (s_, a_, r_, g_) in reversed(traj):
+                  Gret = r_ + g_ * Gret
+                  rets.append(Gret)
+              rets.reverse()
+              seen = set()
+              for (s_, a_, _, _), G_ in zip(traj, rets):
+                  if (s_, a_) in seen:
+                      continue
+                  seen.add((s_, a_))
+                  N[s_, a_] += 1
+                  Q[s_, a_] += (G_ - Q[s_, a_]) / N[s_, a_]
+          pi = np.array([_greedy(Q, x, mask) for x in range(nS)])
+          return pi, Q, np.array(curve)
+
+
+
+References
+[1] Winstein, C. J. et al. Guidelines for adult stroke rehabilitation and recovery. Stroke 47(6):e98-e169, 2016.
+[2] Sutton, R. S. and Barto, A. G. Reinforcement Learning: An Introduction, 2nd ed. MIT Press, 2018.
+[3] Ng, A. Y., Harada, D. and Russell, S. Policy invariance under reward transformations: theory and application to
+      reward shaping. Proceedings of the 16th International Conference on Machine Learning (ICML), 1999.
+[4] Yu, C., Liu, J., Nemati, S. and Yin, G. Reinforcement learning in healthcare: a survey. ACM Computing Surveys
+      55(1):1-36, 2021.
+[5] Gottesman, O. et al. Guidelines for reinforcement learning in healthcare. Nature Medicine 25:16-18, 2019.
+[6] Murphy, S. A. Optimal dynamic treatment regimes. Journal of the Royal Statistical Society: Series B 65(2):331-366,
+      2003.
+[7] Murphy, S. A. A generalization error for Q-learning. Journal of Machine Learning Research 6:1073-1097, 2005.
+[8] Levine, S., Kumar, A., Tucker, G. and Fu, J. Offline reinforcement learning: tutorial, review, and perspectives on open
+      problems. arXiv:2005.01643, 2020.
+[9] Jin, Y., Yang, Z. and Wang, Z. Is pessimism provably efficient for offline RL? Proceedings of the 38th International
+      Conference on Machine Learning (ICML), 2021.
+[10] Kumar, A., Zhou, A., Tucker, G. and Levine, S. Conservative Q-learning for offline reinforcement learning.
+      Advances in Neural Information Processing Systems 33, 2020.
+
+
+                                     Rehabilitation horizon and sparse reward | Page 16
+[11] Bellman, R. Dynamic Programming. Princeton University Press, 1957.
+[12] Puterman, M. L. Markov Decision Processes: Discrete Stochastic Dynamic Programming. Wiley, 1994.
+[13] Singh, S. P. and Sutton, R. S. Reinforcement learning with replacing eligibility traces. Machine Learning 22:123-
+     158, 1996.
+[14] Watkins, C. J. C. H. and Dayan, P. Q-learning. Machine Learning 8(3-4):279-292, 1992.
+
+
+
+
+                                     Rehabilitation horizon and sparse reward | Page 17
+

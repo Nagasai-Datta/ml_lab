@@ -1,0 +1,11 @@
+== paired tests in idea 4 (difference, 95% CI half-width, p) ==
+/pair_unsafe/DP                                                          +0.314 ± 0.317  p=0.0838  n=10
+/pair_unsafe/Monte Carlo                                                 +1.043 ± 0.641  p=0.0110  n=10
+/pair_unsafe/Q-learning                                                  +0.304 ± 0.344  p=0.1176  n=10
+/pair_hypo/DP                                                            +0.004 ± 0.007  p=0.3434  n=10
+/pair_hypo/Monte Carlo                                                   +0.039 ± 0.049  p=0.1534  n=10
+/pair_hypo/Q-learning                                                    +0.011 ± 0.026  p=0.4139  n=10
+/pair_J/DP                                                               +0.127 ± 0.123  p=0.0729  n=10
+/pair_J/Monte Carlo                                                      +0.422 ± 1.127  p=0.4813  n=10
+/pair_J/Q-learning                                                       +0.200 ± 0.293  p=0.2141  n=10
+saved out/idea04/defence_dashboard.png

@@ -1,0 +1,13 @@
+== paired tests in idea 8 (difference, 95% CI half-width, p) ==
+/sweep/200/diff_c2_1.5                                                   +0.049 ± 0.216  p=0.6677  n=8
+/sweep/200/diff_c2_1.0                                                   +0.689 ± 0.190  p=0.0002  n=8
+/sweep/400/diff_c2_1.5                                                   +0.030 ± 0.334  p=0.8657  n=8
+/sweep/400/diff_c2_1.0                                                   +0.668 ± 0.322  p=0.0048  n=8
+/sweep/1000/diff_c2_1.5                                                  -0.083 ± 0.155  p=0.3327  n=8
+/sweep/1000/diff_c2_1.0                                                  +0.111 ± 0.062  p=0.0097  n=8
+/sweep/3000/diff_c2_1.5                                                  -0.102 ± 0.245  p=0.4414  n=8
+/sweep/3000/diff_c2_1.0                                                  -0.013 ± 0.107  p=0.8214  n=8
+/rob2_vs_nom_worst                                                       -0.216 ± 0.201  p=0.0741  n=8
+/rob2_vs_nom_nominal                                                     +0.085 ± 0.202  p=0.4369  n=8
+/rob2_vs_nom_at2                                                         -0.216 ± 0.201  p=0.0741  n=8
+saved out/idea08/defence_dashboard.png

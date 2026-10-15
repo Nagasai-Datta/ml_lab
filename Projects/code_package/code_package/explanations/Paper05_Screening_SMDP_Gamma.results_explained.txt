@@ -1,0 +1,201 @@
+7. Results
+7.1 Headline comparison: SMDP-aware versus naive planning
+Table 3. True-simulator discounted return (gamma = 0.90; mean ± 95% CI over 5 replicates) for SMDP-aware and naive
+versions of each learner; paired differences use the same logged episodes.
+    Method             Return, SMDP-      Return, naive     Paired difference             p                Screens per
+                           aware                            (SMDP − naive)                               episode, SMDP /
+                                                                                                               naive
+    DP on estimated      3.00 ± 0.30       3.13 ± 0.20         -0.13 ± 0.14             0.134               6.33 / 6.23
+
+
+
+                                       SMDP-aware screening schedules | Page 5
+ MDP
+ Monte Carlo                3.34 ± 0.11           2.80 ± 0.29           0.54 ± 0.25              0.013      6.00 / 6.34
+ control
+ Q-learning                 3.21 ± 0.17           3.26 ± 0.22           -0.05 ± 0.12             0.463      6.20 / 6.13
+ Risk-stratified rule          3.47                  3.47                     -                    -           5.94
+ Oracle DP (10x                2.32                  2.37                   -0.04                  -        7.07 / 6.89
+ data)
+
+
+Table 3 is the central comparison. The SMDP-aware version of DP scores 3.00 ± 0.30 against 3.13 ±
+0.20 for the naive version; the paired difference is -0.13 ± 0.14 (p = 0.134), a null result with a point
+estimate in the unfavourable direction. For Q-learning the difference is -0.05 ± 0.12 (p = 0.463), again
+indistinguishable from zero. Only Monte Carlo shows a difference in favour of the SMDP-aware model:
++0.54 ± 0.25 (p = 0.013). That is nominally significant, but it is one of 7 comparisons we report, so it
+does not survive a Bonferroni threshold of 0.0071. The honest summary is that the SMDP correction has
+no reliable effect on DP or Q-learning here, and a suggestive effect on one solver.
+
+
+
+
+Figure 1. True-simulator return (mean, error bar: 95% interval) for the risk-stratified rule, the SMDP-aware and naive
+learners, and the three fixed schedules. Intervals for learned methods are over replicates; those for fixed schedules are
+over evaluation episodes.
+
+Figure 1 adds the fixed schedules. Annual screening is by far the worst policy (-2.95 ± 0.37); biennial
+screening (3.49 ± 0.42) matches the rule (3.47) within the episode-level noise, and triennial screening
+(2.86 ± 0.44) is somewhat lower. Every learned policy scores between 2.80 and 3.34, below biennial
+screening and around the triennial result. Their replicate intervals overlap, and a trivially simple fixed
+schedule is at least as good as anything learned.
+7.2 Screening burden and detection
+Table 4. Per-episode outcomes in the true simulator. Early detections are positive stage-2 screens; late events are stage-3
+detections plus symptomatic presentations. Fixed-schedule returns have episode-level intervals in Figure 1.
+ Policy                             Screens            Early detections (stage         Late events         Return
+                                                                 2)
+ Annual (all patients)                9.67                     0.108                     0.008              -2.95
+ Biennial (all patients)              6.60                     0.205                     0.055              3.49
+ Triennial (all patients)             4.57                     0.207                     0.113              2.86
+ Risk-stratified rule                 5.94                     0.187                     0.054              3.47
+ DP, SMDP-aware                       6.33                     0.186                     0.056              3.00
+ Monte Carlo, SMDP-                   6.00                     0.189                     0.056              3.34
+ aware
+ Q-learning, SMDP-                    6.20                      0.187                    0.055              3.21
+ aware
+ DP, naive                            6.23                      0.189                    0.057              3.13
+ Monte Carlo, naive                   6.34                      0.181                    0.053              2.80
+ Q-learning, naive                    6.13                      0.190                    0.057              3.26
+
+
+Table 4 shows where the policies sit on the screening-burden axis. Annual screening performs 9.67
+screens per episode, triennial 4.57 and biennial 6.60; the rule performs 5.94 and the learned policies 6.00
+
+
+                                              SMDP-aware screening schedules | Page 6
+to 6.34, with early detections nearly flat (0.181 to 0.190) against 0.205 for biennial and 0.207 for
+triennial. The low early-detection count for annual screening (0.108) reflects the stage definitions, not an
+advantage: annual screening catches lesions at stage 1, where treatment resets the stage and earns +8, so
+late events fall to 0.008 from 0.054 for the rule, at a cost of 3.7 more screens per episode (-2 each before
+discounting), consistent with its negative return. Triennial screening has the highest late-event rate
+(0.113, about 2.1 times the rule's). The learned policies differ little from the rule on either axis.
+7.3 Does any learned schedule beat the rule?
+No learned policy exceeds the rule (return 3.47; one-sample t-tests of the per-replicate returns over 5
+replicates). In the SMDP-aware benchmark DP is 0.48 below the rule (p = 0.036), Q-learning 0.26 below
+(p = 0.043) and Monte Carlo 0.13 below (p = 0.081). In the naive benchmark the corresponding gaps are
+0.34 (p = 0.028), 0.21 (p = 0.130) and 0.67 (p = 0.011). The tests treat the rule's value, a single
+deterministic evaluation, as a constant. The logged behaviour policy's modal action scores exactly the
+same as the rule in every replicate, so it is omitted from the tables. The learned policies are at best on a
+par with the rule that generated their data and mostly worse, a pattern familiar from offline reinforcement
+learning [10,15].
+7.4 Why the oracle is worse than the rule: a model-versus-truth diagnostic
+Table 5. Model-predicted versus true policy advantage. Absolute model values are not comparable with simulator values
+(the model treats the fixed horizon and the age limit as a constant termination hazard), but the sign and size of the
+advantage are informative.
+ Quantity                                              SMDP-aware model                    Naive model
+ Model value of the oracle DP policy                         6.98                              9.76
+ (oracle MDP)
+ Model value of the rule (oracle MDP)                         3.80                             4.74
+ Model-predicted advantage of oracle DP                      +3.19                             +5.02
+ over the rule
+ True return of the oracle DP policy                          2.32                             2.37
+ True return of the rule                                      3.47                             3.47
+ True advantage of oracle DP over the rule                    -1.15                            -1.11
+ Sign of predicted and true advantage                          no                               no
+ agree?
+ Optimism of DP trained on 3,000                           1.84 ± 0.77                      2.42 ± 0.92
+ episodes (estimated minus oracle-model
+ value; mean ± 95% CI)
+
+
+Table 5 is the most informative result of the paper, and it is negative for both modelling choices. Even
+the oracle model, estimated from 30,000 episodes, predicts that its optimal policy beats the rule by +3.19
+(SMDP-aware) or +5.02 (naive); in the simulator the same policies are worse than the rule by 1.15 and
+1.11. The sign is wrong in both models, and more data does not fix it: the oracle is trained on ten times
+more data than the learners and does worse than they do. The gap is therefore a model gap, not a
+sampling gap, and the SMDP correction does not remove it: the two oracle policies are very close in true
+return (2.32 versus 2.37). A plausible mechanism, consistent with but not proved by these data, is policy-
+induced distribution shift from the omitted hidden stage: the model learns what a state leads to when the
+logs came from a risk-stratified rule, and a policy that chooses differently meets the same observed states
+with a different mix of hidden stages. We did not test this directly. Estimation optimism is a second
+effect: a DP policy trained on 3,000 episodes is predicted by its own model to be 1.84 ± 0.77 (SMDP-
+aware) and 2.42 ± 0.92 (naive) better than on the oracle model; the paired difference is +0.58 (p = 0.007).
+This is the standard overfitting of plug-in planning.
+
+
+
+
+                                             SMDP-aware screening schedules | Page 7
+7.5 Learning dynamics and agreement among solvers
+
+
+
+
+Figure 2. Learning curves on the oracle MDP (SMDP-aware model; mean ± s.d. over replicates). Both learners rise
+quickly and plateau below the rule's model value; the oracle DP optimum (dashed) is far above.
+
+Figure 2 shows that learning dynamics are not where the difficulty lies. Both learners start at -2.1 (MC)
+and -2.1 (Q-learning) on the oracle MDP, reach 2.98 and 2.82 after only 6,000 steps, and settle at 3.46
+and 3.35 after 150,000 (naive benchmark: 3.94 and 4.34, on a different scale because the naive oracle
+discounts more mildly). Both end below the rule's model value (3.80) and far below the oracle DP
+optimum (6.98): the learners converge to the optimum of their own, imperfect, models, as the diagnostic
+table showed.
+Q-learning reproduces the DP policy in about 97% of well-visited states (at least 5 visits) and Monte
+Carlo in 86%, with nearly the same numbers in the naive model (98% and 87%). Policy iteration and
+value iteration returned policies of the same value in 5 of 5 SMDP-aware and 5 of 5 naive replicates, so
+the solvers are correct. Agreement between solvers is evidence of convergence, not of the quality of the
+model they converge to.
+7.6 What the schedules look like
+In the stored first replicate the three learned schedules stay close to the behaviour pattern, which is the
+rule with noise: they agree with the rule in 87% (DP), 94% (MC) and 87% (Q-learning) of the 108 states.
+The oracle DP, in contrast, is very different from the rule: it agrees in only 45% of states (naive oracle:
+43%; a random choice would agree in about 33%), which fits the diagnostic above: it is the optimum of a
+model whose state omits the disease stage.
+
+
+
+
+Figure 3. Oracle DP intervals by risk tier and age band for patients whose previous interval was two years and previous
+screen negative: SMDP-aware (left) and naive (right).
+
+Figure 3 makes the oracle schedule concrete for one slice of the state space. The two oracle policies are
+close: they differ in 1 of the 18 cells shown and in 8 of 108 states overall. In the low-risk row the SMDP-
+aware oracle chooses 1y/3y/2y/2y/2y/1y for the six age bands, while the rule would say 3 years
+throughout; only 3 of the 18 cells match the rule. The pattern is not monotone in age or risk (high-risk
+patients aged 65-69 are screened annually, those aged 70 or more every three years), which no clinical
+rationale would predict; we read it as fitting noise and misspecification, not as a discovery. The SMDP
+correction changes one cell in this slice (middle risk, 60-64 years) and 1 of the 108 states in the stored
+DP policy of the first replicate, consistent with a small effect on return at gamma = 0.90.
+
+
+
+                                       SMDP-aware screening schedules | Page 8
+7.7 Sweeping the discount factor
+Table 6. Discount-factor sweep (DP only; 5 replicates; same logged episodes for both versions). Returns are on different
+scales for different gamma, so only the paired difference should be compared across rows. The last column is the share of
+well-visited states (at least 5 visits) in which the two policies differ.
+ Yearly γ             SMDP-aware DP       Naive DP return      SMDP − naive               p               States with
+                         return                               (mean ± 95% CI)                         different intervals
+ 0.6                      -0.03                 0.06            -0.09 ± 0.11            0.151                7.3%
+ 0.75                     0.60                  0.93            -0.33 ± 0.19            0.029                6.2%
+ 0.9                      3.18                  3.51            -0.33 ± 0.14            0.009                2.6%
+ 0.97                     6.01                  6.00             0.01 ± 0.03            0.374                0.5%
+
+
+
+
+Figure 4. Left: return of SMDP-aware minus naive DP versus the yearly discount factor (95% intervals over replicates).
+Right: share of well-visited states in which the two policies differ.
+
+Table 6 and Figure 4 give the answer to the question the paper set out to ask. H1 is supported,
+monotonically: the two planners choose different intervals in 7.3% of well-visited states at gamma = 0.6,
+6.2% at 0.75, 2.6% at 0.9 and only 0.5% at 0.97, consistent with Eq. (5), since the naive overstatement
+factor falls from 2.78 to 1.06. H2 is not supported. The return difference is -0.09 ± 0.11 at gamma = 0.6
+(p = 0.151), -0.33 ± 0.19 at 0.75 (p = 0.029), -0.33 ± 0.14 at 0.9 (p = 0.009) and +0.01 ± 0.03 at 0.97 (p =
+0.374). The sign is negative at 3 of 4 discount factors, so on average the SMDP-aware policy is the worse
+one, and nominally significant at 2 of them (gamma = 0.75, 0.9). Against a Bonferroni threshold of
+0.0071 only gamma = 0.9 (p = 0.009) survives; the gamma = 0.75 result (p = 0.029) does not. The
+gamma = 0.9 entry uses different data seeds and 10,000 rather than 15,000 evaluation episodes, so it is a
+separate replication of the main benchmark's DP comparison (-0.13); it points the same way with a larger
+magnitude. The difference is not monotone in gamma: it is largest at the middle values and near zero at
+the extremes, where at gamma = 0.97 the two policies are almost identical.
+What could make a more correct model produce worse policies? We list explanations, none of which we
+tested. (a) Compensating errors. The state omits the disease stage, so the estimated transition
+probabilities are policy-dependent and biased; the naive model's heavier weighting of the future after a
+long interval may offset part of that bias. (b) Proximity to the rule. The naive planner favours long
+intervals where the continuation is positive, as the rule does for the numerous low-risk patients. (c)
+Noise. A t-based interval would be 1.42 times wider, and the three nominally significant findings are
+modest against the multiple-comparison burden. We regard 'the SMDP correction is harmful' as
+unproven; 'it is not reliably beneficial' is what the data support.
+
+8. Discussion

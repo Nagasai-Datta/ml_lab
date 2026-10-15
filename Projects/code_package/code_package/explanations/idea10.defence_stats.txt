@@ -1,0 +1,6 @@
+== paired tests in idea 10 (difference, 95% CI half-width, p) ==
+/mem_vs_less_dp                                                          +0.822 ± 0.193  p=0.0004  n=6
+/mem_vs_less_q                                                           +0.640 ± 0.181  p=0.0010  n=6
+/mem_vs_less_mc                                                          +0.614 ± 0.203  p=0.0020  n=6
+/nudges_dp                                                              +12.168 ± 3.492  p=0.0010  n=6
+saved out/idea10/defence_dashboard.png

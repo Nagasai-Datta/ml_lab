@@ -1,0 +1,196 @@
+7. Results
+7.1 Benchmark at unit price
+Table 3. Benchmark at lambda = 1 (120 states). Return is discounted benefit minus discounted burden; benefit, burden
+and the kidney-failure fraction per episode are also shown (5 replicates, 95% CI; rule and oracle are single policies).
+    Method                  Return (mean ± 95%              Benefit                  Burden                  Failure rate
+                                    CI)
+    Clinician behaviour         11.80 ± 0.00                 18.66                     6.86                      0.04
+    (modal logged action)
+    Guideline rule             11.80 ± 0.00                  18.66                     6.86                      0.04
+    DP on estimated MDP        13.97 ± 0.15                  17.15                     3.18                      0.12
+    Monte Carlo control        13.15 ± 0.38                  17.50                     4.35                      0.09
+    Q-learning                 13.60 ± 0.19                  17.16                     3.56                      0.12
+    Oracle DP (10x data)       13.91 ± 0.00                  15.93                     2.02                      0.19
+
+
+Table 3 shows that all three learners beat the rule at unit price: DP 13.97 ± 0.15, Q-learning 13.60 ± 0.19
+and MC 13.15 ± 0.38 against 11.80. Paired over replicates the differences from the rule are +2.17 ± 0.15
+(p < 0.001) for DP, +1.80 ± 0.19 (p < 0.001) for Q-learning and +1.34 ± 0.38 (p = 0.002) for MC. The
+solvers are ranked DP above Q-learning (paired difference +0.37 ± 0.23, p = 0.033) above MC (DP
+minus MC +0.82 ± 0.48, p = 0.028). The gain is bought by trading burden for failures: the learners cut
+burden from 6.86 to 3.18 (DP) but raise the simulated kidney-failure rate from 4.0% to 11.6%. Whether
+that is a good trade depends entirely on the price λ = 1, which is a modelling choice, so the improvement
+is real only relative to that price. The constant 'always enhanced' policy, evaluated on 600 episodes,
+scores 13.83 at this price (always routine 11.72, always intensive 8.14), so a learned policy that is
+statistically ahead of the rule is not clearly ahead of the best constant policy. The oracle DP, fitted to
+6,000 episodes, scored 13.91, which is within 0.06 of DP fitted to 800 episodes; the tabular
+representation, not data volume, limits performance here (the oracle model's own value for its policy is
+16.86, 3.0 above its true value; we did not diagnose the cause, which may be state aggregation or the
+stationary treatment of the horizon).
+
+
+
+
+                                              Lagrangian DP for CKD care | Page 5
+Figure 1. Learning curves on the oracle MDP (mean ± s.d. over 5 replicates). Dashed: oracle DP optimum; dotted: rule.
+
+Figure 1 shows that both learners start near 13.1 on the oracle model, already above the rule's 11.4, and
+finish at 13.7 (Q-learning, last ten checkpoints) and 13.0 (MC), far below the oracle optimum (16.9).
+Little learning is visible in the curves: the start is above the rule because the initial greedy policy (we did
+not inspect it, but the curve at step 0 is its value) already scores well on this model, and the improvement
+afterwards is at most about 0.6 units. The learned policies differ from the rule in 25 (DP), 26 (MC) and
+24 (Q-learning) of 120 states, and the oracle in 55; Q-learning agreed with DP in 91% of well-visited
+states and MC in 77% (Figure 2). The DP policy's model value minus its true value (optimism gap) was
+positive in 2 of 5 replicates, so on average the model is not systematically optimistic about the policy it
+picks, in contrast to its optimism about the oracle's.
+
+
+
+
+Figure 2. Action in each state observed in the data (routine, enhanced, intensive). The learned policies follow the
+structure of the behaviour policy and change many individual states; the oracle differs most.
+
+Figure 2 shows that the learners keep the behaviour policy's coarse structure (intensive at low eGFR,
+routine at high eGFR) and change many individual cells. Because the cells are sorted by eGFR band, the
+striping reveals that the changes depend on proteinuria and previous action, as the state encodes, but also
+that many are isolated single cells, which look like noise from thin data. Over all 120 states the oracle
+policy uses routine care in 78, enhanced in 28 and intensive in 14, against 48, 24 and 48 for the rule: it
+gives much less intensive care than the rule, which is what a unit price on burden rewards, and it departs
+from the rule far more than the learners do (28 intensive states for DP).
+7.2 The benefit-burden frontier
+Table 4. Lagrangian DP frontier: true-simulator discounted benefit and burden and the kidney-failure fraction by burden
+price (10 replicates, 95% CI). The last column is the realised exchange rate between consecutive points.
+ Price λ                        Benefit                    Burden              Kidney failure      Benefit lost per
+                                                                                                   burden saved vs
+                                                                                                     previous λ
+ 0                            18.39 ± 0.15               6.23 ± 0.38               7.5%                   -
+ 0.25                         17.83 ± 0.16               5.00 ± 0.35               10.2%                0.45
+ 0.5                          17.47 ± 0.15               4.12 ± 0.25               11.5%                0.42
+ 1                            16.52 ± 0.21               2.94 ± 0.22               16.3%                0.80
+
+
+                                             Lagrangian DP for CKD care | Page 6
+ 2                            15.15 ± 0.19               1.63 ± 0.12               22.7%                  1.05
+ 4                            13.77 ± 0.40               0.85 ± 0.11               28.8%                  1.77
+ 8                            12.52 ± 0.18               0.34 ± 0.07               34.2%                  2.45
+ 16                           12.14 ± 0.22               0.21 ± 0.07               35.8%                  2.80
+
+
+Table 4 is the frontier. As the price rises from 0 to 16, burden falls from 6.23 to 0.21, benefit falls from
+18.39 to 12.14, and the kidney-failure fraction rises from 7.5% to 35.8%; all three are strictly monotone
+in the price, as theory predicts. At the top price the policy is nearly the always-routine policy (benefit
+11.72, burden 0.00, failure 38.5%). The exchange rate in the last column increases overall with the price
+(from 0.45 to 2.80), which is the signature of a concave frontier: the first units of burden saved are cheap
+in benefit and the last are expensive. Equation (4) requires each rate to lie between the two prices that
+bound it; it does for 3 of the 7 pairs, and fails for 0 to 0.25 (0.45, above the upper price), 2 to 4 (1.77,
+below the lower price), 4 to 8 (2.45, below the lower price), 8 to 16 (2.80, below the lower price). At the
+high-price end, where the realised rate falls short of the price, the learned policy at the higher price is not
+optimal for the lower price in the true simulator.
+
+
+
+
+Figure 3. Benefit against burden: the Lagrangian DP frontier (points labelled by price; bars: 95% CI over 10 replicates)
+and the four reference policies.
+
+Figure 3 puts the frontier next to the fixed policies. The 'always enhanced' policy sits above the frontier:
+it achieves benefit 17.36 at burden 3.53, whereas linear interpolation between learned points gives 16.99
+at that burden, a shortfall of 0.37, larger than the frontier's own interval widths (0.15 to 0.21 at the
+neighbouring prices). The nephrologist-style rule lies beyond the right end of the frontier: it has burden
+6.79 against 6.23 for the most benefit-seeking learned policy (λ = 0), and higher benefit (18.84 against
+18.39) and a lower failure rate (3.5% against 7.5%). 'Always intensive' reaches benefit 20.45 at burden
+12.31, far above anything the learner explores. In other words, the learned frontier is limited by the
+support of the logs: with λ = 0 a benefit-maximising planner would give intensive care everywhere, but it
+can do so only in states where the logs contain enough intensive visits, and those are the low-eGFR states
+where the rule already does it. That reading is a hypothesis about the mechanism, supported by the
+behaviour policy's structure (Figure 2) but not tested separately.
+
+
+
+
+                                             Lagrangian DP for CKD care | Page 7
+Figure 4. Simulated kidney-failure fraction against the burden price (symmetric-log axis).
+
+Figure 4 shows the safety cost of pricing burden. The failure fraction rises slowly from 7.5% at λ = 0 to
+11.5% at λ = 0.5, then steeply to 28.8% at λ = 4 and flattens near 35.8%, close to the always-routine rate
+(38.5%). A failure costs 20 benefit units, comparable to the whole discounted benefit of a surviving
+patient (Table 4), so this curve is the part of the frontier that a clinician would worry about: a price of 1
+already multiplies the failure rate by 2.2 relative to λ = 0 (16.3% versus 7.5%), and the rule's 3.5% is
+below every learned point (the lowest is 7.5%).
+Table 5. Price-consistency check from the sweep means: at each price λ, the true scalarised value (benefit − λ × burden)
+of the policy trained at λ, compared with the best policy among the eight trained.
+ Price λ                  Best-trained price at        Value of the policy           Value of the best             Shortfall
+                          this evaluation price           trained at λ                    policy
+ 0                                   0                       18.39                        18.39                      0.00
+ 0.25                                0                       16.58                        16.83                      0.25
+ 0.5                               0.5                       15.41                        15.41                      0.00
+ 1                                   1                       13.58                        13.58                      0.00
+ 2                                   4                       11.88                        12.06                      0.18
+ 4                                  16                       10.36                        11.31                      0.95
+ 8                                  16                        9.78                        10.48                      0.69
+ 16                                 16                        8.81                         8.81                      0.00
+
+
+Table 5 tests whether the policy trained at a price is the best at that price in the true simulator. It is for 4
+of 8 prices (λ = 0, 0.5, 1, 16), and not for the others. For λ = 2, 4, 8 the best policy is one trained at a
+higher price (λ = 4, 16, 16), by margins of up to 0.95. This is the same finding as the failure of Eq. (4) at
+the high end, seen from the other side: at high prices the learned policy underestimates how valuable it is
+to save burden or overestimates how much benefit it gives up, so it saves too little burden for its price. A
+different reading is that those policies are noisy (the estimated model is least reliable far from the logged
+behaviour). The data cannot separate the two.
+7.3 Burden budgets and safety margins
+Table 6. Burden-budget planning: price chosen by bisection, model-predicted and realised burden, number of replicates
+(of 10) whose realised burden exceeded the budget, benefit and failure fraction. An asterisk marks a mean realised burden
+above the budget with a t-based 95% interval that excludes it.
+ Budget          Margin      Mean price    Predicted        Realised         Realised /     Exceed       Benefit            Failure
+                                 λ          burden           burden          predicted      budget?
+ 2                 0%          1.05          1.91          2.65 ± 0.20         1.39         10/10 *      16.33              17.5%
+ 2                25%          1.41          1.53          2.12 ± 0.12         1.39          8/10        15.80              19.9%
+ 2                50%          1.80          1.24          1.85 ± 0.13         1.49          3/10        15.47              21.3%
+ 4                 0%          0.24          3.83          4.87 ± 0.18         1.27         10/10 *      17.81              10.3%
+ 4                25%          0.51          2.97          3.99 ± 0.19         1.34          5/10        17.36              12.1%
+ 4                50%          0.71          2.54          3.46 ± 0.14         1.36          0/10        17.01              13.7%
+ 6                 0%          0.00          4.91          6.23 ± 0.38         1.27          6/10        18.39              7.5%
+ 6                25%          0.07          4.57          5.81 ± 0.17         1.27          3/10        18.20              8.6%
+ 6                50%          0.24          3.83          4.87 ± 0.18         1.27          0/10        17.81              10.3%
+
+
+
+
+                                           Lagrangian DP for CKD care | Page 8
+Table 6 is the safety-margin result. With no margin the model-predicted burden is on target by
+construction (it is at or below the budget) but the realised burden is higher in every cell: the ratio of
+realised to predicted is 1.27 to 1.39 at m = 0 and 1.27 to 1.49 over all cells. Consequently the budget was
+exceeded in 10, 10 and 6 of 10 replicates for budgets of 2, 4 and 6. (For the budget of 6 and no margin
+the model's unconstrained policy already satisfies the budget, so the price is 0, and the realised burden
+still exceeds it in 6 of 10 replicates.) A 25% margin brought exceedances to 8, 5 and 3, and a 50%
+margin to 3, 0 and 0. The calibration rule of Eq. (6) predicts that a margin of at least ρ − 1, that is 39%,
+27%, 27% for budgets 2, 4 and 6 (from the m = 0 row), is needed on average; this fits the counts, since
+25% was insufficient and 50% was sufficient or nearly so for every budget.
+
+
+
+
+Figure 5. Realised burden (left; black bars: budget) and benefit (right) by budget and margin (10 replicates; 95% CI).
+
+Figure 5 shows the same in the true-simulator units. The mean realised burden shrinks with the margin:
+at a 25% margin it is 2.12, 3.99 and 5.81 for budgets 2, 4 and 6, and at 50% it is 1.85, 3.46 and 4.87. A
+mean at or just under the budget still leaves many replicates above it, because replicates scatter around
+the mean (the error bars), which is why exceedances persist at 25%. The price of safety is visible on the
+right: a 50% margin instead of none costs 0.86, 0.79 and 0.58 units of benefit and raises the kidney-
+failure fraction by 3.8, 3.5 and 2.8 percentage points at budgets 2, 4 and 6. Looser budgets are cheaper to
+protect than tight ones, consistent with a concave frontier: the same proportional tightening removes a
+smaller slice of benefit where the frontier is flatter.
+
+
+
+
+Figure 6. Share of replicates whose realised burden exceeded the budget, by budget and margin (10 replicates).
+
+Figure 6 summarises the exceedance rates as percentages. With 10 replicates each point has a granularity
+of 10 percentage points and a wide binomial interval, so the figure should be read as monotone evidence
+(more margin, fewer violations) and not as a precise rate. Even with a 50% margin the budget of 2 was
+exceeded in 3 of 10 replicates, which a user who needs a hard guarantee would not accept; a distribution-
+free guarantee would require a conformal-style or hold-out calibration, which we did not do.
+
+8. Discussion

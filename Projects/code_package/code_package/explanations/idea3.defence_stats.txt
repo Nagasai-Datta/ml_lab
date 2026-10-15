@@ -1,0 +1,5 @@
+== paired tests in idea 3 (difference, 95% CI half-width, p) ==
+/static_vs_pooled10_20                                                   +8.143 ± 3.589  p=0.0067  n=6
+/surgeonly_vs_static_20                                                  -1.418 ± 1.411  p=0.1058  n=6
+/pooled10_vs_surgeonly_5                                                 +4.883 ± 3.000  p=0.0243  n=6
+saved out/idea03/defence_dashboard.png

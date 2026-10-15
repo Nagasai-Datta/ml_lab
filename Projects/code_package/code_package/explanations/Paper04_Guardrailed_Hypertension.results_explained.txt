@@ -1,0 +1,191 @@
+7. Results
+7.1 Headline comparison
+Table 3. True-simulator discounted return (24 months, mean ± 95% CI over 10 replicates) with the guardrail off and on.
+The rule and the oracle are single fixed policies, so their intervals are zero.
+    Method                             Return, mask off                Return, mask on               Paired change (on − off)
+    Guideline rule                        3.21 ± 0.00                    3.21 ± 0.00                            -
+    Clinician behaviour (modal            3.19 ± 0.01                    3.19 ± 0.01                            -
+    logged action)
+    DP on estimated MDP                  3.02 ± 0.27                       3.15 ± 0.19                +0.13 ± 0.12 (p = 0.073)
+    Monte Carlo control                  1.04 ± 0.84                       1.46 ± 0.66                +0.42 ± 1.13 (p = 0.481)
+    Q-learning                           2.69 ± 0.28                       2.89 ± 0.23                +0.20 ± 0.29 (p = 0.214)
+    Oracle DP (10x data)                 3.82 ± 0.00                       3.82 ± 0.00                           -
+
+
+Table 3 gives the headline numbers. The guideline rule scores 3.21, and the clinician-behaviour policy
+(the modal logged action) 3.19. Learned policies do not exceed them: unmasked DP scores 3.02 ± 0.27,
+Q-learning 2.69 ± 0.28 and Monte Carlo 1.04 ± 0.84. With the mask, the means move to 3.15, 2.89 and
+
+
+                                         Guardrails for hypertension titration | Page 5
+1.46. The mask raised the mean return for every solver, but none of the paired changes is statistically
+distinguishable from zero at the 5% level (p = 0.073, p = 0.214 and p = 0.481 for DP, Q-learning and
+Monte Carlo); the guarded return exceeded the unguarded return in 4, 5 and 7 of 10 replicates. The
+defensible reading is that the mask does not cost return here, and may help slightly, not that it improves
+return.
+The oracle DP, trained on ten times more data, scores 3.82, 0.61 above the rule; hence there is real
+headroom in this simulator, and the learned policies at 300 episodes capture none of it. Guardrailed DP is
+0.68 below the oracle. This gap is a data-quantity effect (estimation error in 216 state-action pairs from
+7,200 transitions), and the mask cannot close it because the oracle's own policy already satisfies the
+guardrail (its unsafe up-titration rate is 0.000; the oracle's model value is identical with and without the
+mask, 3.41 versus 3.41).
+
+
+
+
+Figure 1. True return of each method with the guardrail on (means with 95% CIs over replicates). Monte Carlo is far
+below the others; the mask-off figure has the same ordering.
+
+Figure 1 (and Table 3 for the mask-off condition) shows the same ordering in both conditions: rule and
+behaviour policy at the top, DP just below them, Q-learning lower and Monte Carlo lowest. Against the
+rule, the paired differences with the mask on are -0.06 ± 0.19 for DP (p = 0.535), -0.32 ± 0.23 for Q-
+learning (p = 0.022) and -1.75 ± 0.66 for Monte Carlo (p < 0.001). In other words, guardrailed DP is
+statistically indistinguishable from the rule at this sample size (and above it in 6 of 10 replicates), Q-
+learning is reliably below it and Monte Carlo is far below it. Among learners, Q-learning trails DP by
+0.26 ± 0.27 (p = 0.099) and Monte Carlo trails DP by 1.69 ± 0.67 (p < 0.001).
+7.2 Safety outcomes
+Table 4. Safety counters per 24-month episode (means over 10 replicates). 'Paired reduction' is mask off minus mask on
+with a 95% CI and a one-sample t-test p-value.
+ Method              Unsafe up-       Unsafe up-          Paired          Hypotensive   Hypotensive         Paired
+                   titrations, off   titrations, on    reduction (p)      months, off   months, on      reduction (p)
+ Guideline rule         0.000            0.000                -             0.004         0.004                -
+ DP on estimated        0.315            0.000        0.31 ± 0.32 (p =      0.007         0.004        0.004 ± 0.007 (p
+ MDP                                                       0.084)                                          = 0.343)
+ Monte Carlo           1.043             0.001        1.04 ± 0.64 (p =        0.089        0.050       0.039 ± 0.049 (p
+ control                                                   0.011)                                          = 0.153)
+ Q-learning            0.304             0.000        0.30 ± 0.34 (p =        0.016        0.005       0.011 ± 0.026 (p
+                                                           0.118)                                          = 0.414)
+
+
+
+Table 4 is the main evidence for the guardrail. Without it, all three learners take actions that rule 1
+forbids: 0.31 per episode for DP, 0.30 for Q-learning and 1.04 for Monte Carlo, against 0.00 for the rule.
+Monte Carlo makes about one such error per two-year course, which is 4% of its visits. In the replicates,
+an unconstrained DP policy made at least one unsafe up-titration in 4 of 10 replicates, Q-learning in 4
+and Monte Carlo in 6. With the mask the counts are 0.000, 0.000 and 0.001. The residual for Monte
+Carlo is not exactly zero. Since the mask is enforced in every state with a model, this residual is most
+
+                                       Guardrails for hypertension titration | Page 6
+plausibly due to the fallback to the modal logged action in states without a model; we did not trace
+individual violations, so this is a hypothesis.
+Statistical strength differs by solver. For Monte Carlo the paired reduction is 1.04 ± 0.64 (p = 0.011). For
+DP it is 0.31 ± 0.32 (p = 0.084) and for Q-learning 0.30 ± 0.34 (p = 0.118): the point estimates are of the
+same order as Monte Carlo's per replicate but the replicate-to-replicate variation is large, because unsafe
+actions occur in only some data draws. The direction is consistent, the interval for DP and Q-learning
+includes zero, and we therefore describe the effect for these two solvers as suggestive rather than
+established. We did not adjust for multiple comparisons; adjusting would weaken even the Monte Carlo
+result slightly, which should be borne in mind.
+Hypotensive months, the outcome that the guardrail is intended to prevent, are rare. Unmasked DP has
+0.007 per episode and the guarded version 0.004; for Q-learning the figures are 0.016 and 0.005; for
+Monte Carlo 0.089 and 0.050. None of the paired reductions is significant (p = 0.343, p = 0.414 and p =
+0.153). So the mask removes the unsafe action reliably, but at this sample size we cannot show that it
+removes the downstream harm: the rare outcome needs more evaluation episodes or more replicates to
+detect.
+
+
+
+
+Figure 2. Left: hypotensive months per episode. Middle: unsafe up-titrations per episode. Right: true return. Grey: mask
+off; blue: mask on (means with 95% CIs).
+
+Figure 2 summarises the three outcomes. The middle panel carries the effect: grey bars for the learners
+are well above zero and the blue bars are at zero. The left panel shows the much smaller hypotension
+counts, in which overlapping intervals are visible for every solver, and the right panel shows that return
+does not move beyond noise. Monte Carlo has the widest intervals in all panels (its return interval with
+the mask off is 1.3 times that with the mask on), consistent with the high variance of full-episode returns.
+7.3 Treatment-pattern outcomes
+Table 5. Secondary outcomes: months with 110 ≤ SBP ≤ 130 mmHg, number of dose changes, and cumulative dose-
+months (sum of dose level over 24 months; maximum 72).
+ Method              In-range          In-range        Dose changes,      Dose changes,   Cumulative      Cumulative
+                   months (of 24),    months, on            off                on          dose, off       dose, on
+                        off
+ Guideline rule        12.3              12.3               2.5                2.5           52.6            52.6
+ Clinician             12.2              12.2               2.5                2.5           52.5            52.5
+ behaviour
+ (modal logged
+ action)
+ DP on estimated        11.9             11.8               4.3                3.8           50.2            50.5
+ MDP
+ Monte Carlo            10.4             10.8               4.9                5.1           49.4            48.8
+ control
+ Q-learning             11.2             11.4               4.6                4.5           49.2            49.6
+ Oracle DP (10x         14.3             14.3               5.9                5.9           54.9            54.9
+ data)
+
+
+
+                                       Guardrails for hypertension titration | Page 7
+Table 5 shows that the learned policies are more active than the rule. The rule makes 2.5 dose changes
+per course, DP 3.8, Q-learning 4.5 and Monte Carlo 5.1; the oracle makes 5.9 and obtains the most in-
+range months (14.3 against 12.3 for the rule). One possible reading, which we have not tested, is that the
+optimum makes fine adjustments near the 130 mmHg edge of the target range, which the reward's
+switching penalty (0.1 per change) only partly discourages. The learned policies do not achieve that
+benefit: in-range months for guarded DP are 11.8, below the rule's 12.3, while making 1.3 more dose
+changes. The mask changes these patterns only slightly (for DP, 4.3 changes without and 3.8 with the
+mask). Clinically, a policy that changes the dose more often than the rule while keeping fewer months in
+range would be unattractive even if its return were equal, an argument for reporting these secondary
+measures alongside return.
+7.4 Learning dynamics
+
+
+
+
+Figure 3. Policy value on the oracle MDP during learning (mean over replicates), with the mask off (pale lines) and on
+(bold lines). The dashed line is the guardrailed DP optimum on the oracle model.
+
+Figure 3 compares learning curves. Q-learning reaches its plateau by the first checkpoint (4,800 steps), at
+2.65 with the mask and 2.49 without; it never approaches the oracle optimum of 3.41, because it is
+solving the estimated model, whose optimum differs from the oracle's. Monte Carlo is slower and
+plateaus much lower, at 1.56 with the mask and 1.00 without. The plateau is higher with the mask for
+both learners (by 0.15 for Q-learning and 0.57 for Monte Carlo) and in the starting value: the value at
+step 0 is -11.9 for guarded Q-learning against -13.8 for unguarded, presumably because an exploring
+policy that cannot raise the dose at low pressure is less harmful (we did not isolate this). A conventional
+convergence statistic would be steps to 90% of the gap between the behaviour policy and the oracle (3.28
+on this scale); no learner reached it in any condition, so we do not report one.
+
+
+
+
+                                      Guardrails for hypertension titration | Page 8
+Figure 4. Learning curves with the mask on, with ±1 standard deviation bands over replicates; dotted line is the rule's
+value on the oracle model.
+
+Figure 4 shows the guarded curves separately, with the rule's model value (2.28) as a dotted line. Both Q-
+learning curves sit above the rule on the oracle model, which is consistent with the model prediction that
+a learned policy can beat the rule. The simulator tells a different story: Table 3 shows no learned policy
+beating the rule in the real dynamics. A related quantity is the optimism gap, the DP policy's value on its
+own estimated MDP minus its value on the oracle MDP. It averaged -0.23 ± 0.45 without the mask and -
+0.35 ± 0.38 with it; both intervals include zero, so we do not claim a systematic optimism here. Absolute
+model values are also not comparable to simulator values, because the oracle MDP treats the 24-month
+horizon as a constant termination hazard (see limitations).
+7.5 Agreement between learners and policy structure
+Table 6. Fraction of well-visited states (at least 5 visits) in which the model-free learner chooses the same action as DP
+on the same estimated MDP.
+ Learner                                       Agreement with DP, mask off               Agreement with DP, mask on
+ Monte Carlo                                              79%                                       79%
+ Q-learning                                               95%                                       95%
+
+
+
+
+Figure 5. Policies by state with the mask on (states observed in the data): behaviour, DP, Monte Carlo, Q-learning and
+oracle. Colours: down, hold, up.
+
+
+
+
+                                        Guardrails for hypertension titration | Page 9
+Figure 6. Policies by state with the mask off.
+
+Table 6 shows that Q-learning reproduces the DP action in about 95% of well-visited states and Monte
+Carlo in about 79%, with similar values without the mask (95% and 79%). Monte Carlo's lower
+agreement matches its lower return. Figures 5 and 6 show the policies. In both conditions the policies
+agree on the extremes (lowering the dose at the lowest pressures, raising it at the highest) and differ in
+the middle of the state space, where the behaviour policy simply holds. The oracle's raising of the dose in
+several mid-range states is the main structural difference from the rule and is consistent with its extra in-
+range months in Table 5. In the unmasked panel (Figure 6) some cells in the left half of the state axis
+show 'up' for the learned policies where the masked panel shows 'hold', which may be the visual
+counterpart of the unsafe up-titrations in Table 4; we did not map the plotted state indices back to bands,
+so this is an impression, not a count.
+
+8. Discussion

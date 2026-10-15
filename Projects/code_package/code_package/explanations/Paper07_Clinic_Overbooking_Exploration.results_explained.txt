@@ -1,0 +1,701 @@
+7. Results
+7.1 Benchmark in the true simulator
+Table 3. Benchmark in the true simulator (100 states). Return is discounted; shows, overtime, idle slots and the summed
+waiting-list length are totals per 40-session episode (5 replicates, 95% CI; rule and oracle are single policies).
+    Method             Return (mean ±            Shows                Overtime                 Idle                Waiting
+                          95% CI)
+    Clinician            160.3 ± 0.1              375.9                  9.9                   34.1                  194.6
+    behaviour (modal
+    logged action)
+    Guideline rule       160.3 ± 0.0              375.9                  9.9                   34.0                  194.8
+    DP on estimated      162.2 ± 3.3              377.5                 11.1                   33.6                  181.4
+    MDP
+    Monte Carlo          166.6 ± 4.0              379.9                 12.9                   32.9                  154.0
+    control
+    Q-learning           164.4 ± 3.1              378.1                 11.6                   33.5                  169.2
+    Oracle DP (10x       179.0 ± 0.0              394.3                 21.5                   27.1                   72.3
+    data)
+
+
+Table 3 shows that the learners are ahead of the rule on average but not by much, and not consistently.
+DP scored 162.19 ± 3.34, MC 166.57 ± 3.99 and Q-learning 164.36 ± 3.08 against 160.27 for the rule.
+
+
+                                       Clinic overbooking, exploration and shift | Page 5
+Paired over replicates the differences from the rule are +1.92 ± 3.34 (p = 0.324; ahead in 4 of 5) for DP,
++6.30 ± 3.99 (p = 0.036; 5 of 5) for MC and +4.09 ± 3.08 (p = 0.060; 5 of 5) for Q-learning. With 5
+replicates a t-interval is 1.42 times wider than the 1.96-standard-error interval shown, so the p-values
+(which use the t distribution) are the safer guide: only MC is below 0.05, Q-learning is borderline, and
+DP is not distinguishable from the rule. Among the learners no difference is resolved either (DP minus
+Q-learning -2.17 ± 2.03, p = 0.105; DP minus MC -4.38 ± 5.92, p = 0.220; MC minus Q-learning +2.21 ±
+4.22, p = 0.363). The replicate-to-replicate standard deviations are 3.5 for Q-learning and 4.6 for MC,
+which is the scale of the noise to keep in mind below. In 1 of 5 replicates the DP policy scored exactly as
+the logged modal-action policy (160.30), consistent with it having reproduced the behaviour policy there.
+The oracle DP, fitted to 1,500 episodes, scored 179.01, which is 18.7 above the rule and 12.4 above the
+best learner. This is the opposite of the finding in a problem where data volume does not matter: here the
+headroom is large and the learners trained on 150 episodes capture only part of it (34% for MC, 22% for
+Q-learning, 10% for DP). The operational columns show how the oracle gets there: it books more
+patients (394 shows per episode against 376 for the rule), accepts about 2.2 times as much overtime (21.5
+against 9.9), has fewer idle slots (27.1 against 34.0) and, above all, a much shorter waiting list (72
+against 195). The learners move in the same direction but only a little: MC reduces the summed waiting
+list to 154 and Q-learning to 169, with overtime of 12.9 and 11.6.
+
+
+
+
+Figure 1. Learning curves on the oracle MDP (mean ± s.d. over 5 replicates). Dashed: oracle DP optimum; dotted: rule-
+based (modal behaviour) policy.
+
+Figure 1 shows the learning curves on the oracle model, which is the scale used for all efficiency metrics.
+Both learners start at 48.0 (the greedy policy of an all-zero value table) and rise to within one model unit
+of their final value by step 12,000 (Q-learning) and 18,000 (MC) of the 150,000, then stay flat at 122.4
+and 123.3. These plateaus match the mean DP policy value on the same model (122.7) to within 0.6, as
+expected when learning in a fitted model converges to its solution. They lie below the rule's 125.6 and far
+below the optimum 150.0. The model-scale and true-simulator pictures therefore disagree in sign: on the
+model DP, MC and Q-learning are 2.9, 2.3 and 3.2 below the rule, while in the true simulator they are
+1.9, 6.3 and 4.1 above it. In 12 of 15 replicate-learner cells the model value is below the rule's.
+Understanding why requires looking at what the model-scale value measures. The oracle model treats a
+state-action pair seen fewer than 10 times as absorbing with the worst reward in the data, so a policy that
+chooses such an action is penalised on the model whatever it would do in the clinic. All the model-scale
+values are far below their true values: the true return minus the oracle-model value ranges from 29.0 to
+43.3 over the six methods, and the data model's value of its own DP policy was 28.0 to 41.9 below the
+oracle model's value of the same policy in every replicate (mean optimism gap -37.2). This is a code-
+level reading, not a tested explanation, but it implies that the model scale is a pessimistic and distorted
+version of the true scale; we use it only to compare learning speed.
+
+
+
+
+                                    Clinic overbooking, exploration and shift | Page 6
+Figure 2. Extra bookings chosen in each state (replicate 0) by the behaviour policy, the three learners and the oracle.
+States are sorted by weekday, then no-show band, then waiting-list band.
+
+Figure 2 compares the policies for replicate 0. The rule uses +1 in 50 states and +2 in 50, never anything
+else. The modal-action behaviour policy differs from it in 6 states, and the learners in 8 (DP), 11 (MC)
+and 9 (Q-learning) of 100; they differ from the behaviour policy in only 2, 5 and 3 states. The oracle
+differs from the rule in 30 states and is the only policy that uses +3 (7 states) or +4 (19 states) with any
+frequency; the learners use them in at most 4 states. Action 0 appears in 5 states of the behaviour policy,
+which is consistent with the default action for states absent from the data (default is 0), although we did
+not check that directly. This pattern agrees with the support argument of Section 4: with 150 episodes the
+high-overbooking actions are mostly unsupported, so the learners cannot adopt them, and the benchmark
+gains of +2 to +6 come from changes to a handful of states. Q-learning agreed with DP in 98% and MC
+in 93% of the well-visited states, averaged over replicates. Because only replicate 0 is plotted and DP in
+that replicate scored 156.8, below the rule's 160.3, the figure should not be read as showing the policies
+that earned the averages in Table 3.
+7.2 Exploration schedules on the fitted model
+Table 4. Exploration schedules: normalised area under the learning curve (AUC), normalised final value and the number
+of runs (of 12) reaching 90% of the optimal improvement. Values are on the scale of Eq. (4): 0 is the clinic's behaviour
+and 1 the oracle-model optimum (6 replicates, 95% CI).
+ Schedule             Q-learning AUC      Q-learning final          MC AUC                 MC final      Reached 90%
+ eps=0.1 const          -0.20 ± 0.10        -0.01 ± 0.09           -0.16 ± 0.09           -0.06 ± 0.13       0/12
+ eps exp. decay         -0.05 ± 0.12        0.11 ± 0.10            -0.29 ± 0.09           -0.13 ± 0.11       0/12
+ GLIE 1/k               -0.12 ± 0.11        0.09 ± 0.13            -0.16 ± 0.14           -0.03 ± 0.14       0/12
+ Optimistic init        -0.17 ± 0.09        -0.03 ± 0.11           -0.25 ± 0.18           -0.07 ± 0.20       0/12
+ Near-greedy (0.02)     -0.54 ± 0.08        -0.11 ± 0.11           -0.35 ± 0.14           -0.06 ± 0.15       0/12
+
+
+Table 4 is the central comparison of the schedule study. No run reached the 90% target in any of the 60
+runs, so the steps-to-90% metric is undefined for every schedule (the left panel of the efficiency figure in
+the code output is empty for this reason); the best mean final value was +0.107 (Q-learning, eps exp.
+decay), so the 0.9 target is about 8 times larger. The reason is visible in Figure 1: the learners plateau at
+the value of the DP solution of the fitted model, which on the model scale is slightly below the rule's, so
+even a perfect solver of that model cannot approach 1. The AUC values are all negative, from -0.54 to -
+0.05 for Q-learning and from -0.35 to -0.16 for MC. A part of every AUC is a common offset: the first
+checkpoint (step 0) has v = -3.18, which contributes -0.122 to the mean over 26 checkpoints in every run,
+so the offset is the same for all schedules and does not affect comparisons but does make the absolute
+AUC look worse than the learning actually is. No final value differs from zero once the intervals are
+widened to t-intervals (0 of 10 do), so after 150,000 steps all schedules end at about the behaviour
+policy's model value, with the largest positive mean being +0.107.
+
+
+
+
+                                     Clinic overbooking, exploration and shift | Page 7
+Figure 3. Normalised learning curves by exploration schedule (mean ± s.d. over 6 replicates). 0 is the clinic's behaviour
+and 1 the oracle-model optimum.
+
+Figure 3 shows what separates the schedules: almost entirely the first steps and, for the near-greedy
+schedule, a slow climb. For Q-learning the near-greedy schedule has an AUC of -0.54 ± 0.08, against -
+0.05 ± 0.12 for the best schedule (eps exp. decay); its t-widened interval is separated from 4 of the other
+4 schedules. This is the one robust schedule effect in the study, and it is the textbook one: a learner that
+explores little needs many more steps to learn the values of actions it rarely tries. The same schedule for
+MC (AUC -0.35 ± 0.14) is separated from 0 of the other 4 schedules, so for MC the evidence does not
+distinguish it from the rest. Among the other four schedules for Q-learning the AUC differences are
+between 0.03 and 0.15, and none of these pairs is separated by the t-widened intervals. Optimistic
+initialisation (q0 = 164, ε = 0.02) gives AUC -0.17 for Q-learning against -0.20 for constant ε, and -0.25
+against -0.16 for MC; with intervals of ±0.09 to ±0.18 these do not separate. Seen from the offline-RL
+angle this is unsurprising, because exploration inside a fitted model cannot reveal pairs absent from the
+logs: once the supported part of the model is sampled enough, every schedule converges to the same
+solution, and the schedule only changes how soon.
+7.3 Does the model-scale metric predict true return?
+Learning efficiency is measured on the model scale, but what matters is true return. For each learner we
+ranked the five schedules by their AUC and by the true return of the final policy on nominal data (Table
+5). For Q-learning the two rankings agree exactly (Spearman correlation +1.00 over five schedules); for
+MC they hardly agree (+0.30). With only five points no p-value is reported and the numbers are
+descriptive. The best schedule by true return is eps exp. decay for Q-learning (true return 169.5) and
+eps=0.1 const for MC (167.8), and the worst is Near-greedy (0.02) (161.2) and eps exp. decay (161.4).
+The exponential decay schedule is the best for Q-learning and the worst for MC, and across the five
+schedules the true-return ranks of the two learners have a correlation of -0.90.
+How much of this is signal? The same learner with the exponential schedule also appears in the
+benchmark, with different data draws (seeds 1000 to 1004 against 700 to 705) and more evaluation
+episodes (300 against 120): Q-learning scored 164.4 there and 169.5 here (+5.1), and MC 166.6 there and
+161.4 here (-5.2). Based on the code these are the same configuration, so differences of about 5 units
+arise from the data draws and the evaluation sample alone. The spread of true returns across schedules is
+8.3 for Q-learning and 6.5 for MC, which is 1.6 and 1.2 times that discrepancy, so the data do not
+establish that any schedule changes true return, and the opposite orderings of the two learners are
+consistent with noise.
+7.4 Robustness to a change in the no-show rate
+Table 5. True return of the final policies under a shifted no-show rate. Entries for Q-learning and MC are means over 6
+replicates (120 evaluation episodes each); the rule is evaluated on 300 episodes and DP on one replicate and 300 episodes.
+No confidence intervals were stored for these entries.
+ Policy                         Nominal               No-show +0.08             No-show -0.05         Change, -0.05 vs
+
+
+                                     Clinic overbooking, exploration and shift | Page 8
+                                                                                                  nominal
+ Overbooking rule              160.3                    166.0                     136.7            -23.5
+ DP (replicate 0)              167.8                    166.3                     147.4            -20.4
+ Q-learning: eps=0.1           162.9                    166.5                     139.9            -22.9
+ const
+ Q-learning: eps exp.          169.5                    166.7                     151.1            -18.4
+ decay
+ Q-learning: GLIE 1/k          169.1                    166.5                     150.3            -18.8
+ Q-learning: Optimistic        164.4                    166.5                     143.0            -21.4
+ init
+ Q-learning: Near-             161.2                    166.0                     138.9            -22.3
+ greedy (0.02)
+ Monte Carlo: eps=0.1          167.8                    166.7                     147.1            -20.7
+ const
+ Monte Carlo: eps exp.         161.4                    165.4                     142.4            -18.9
+ decay
+ Monte Carlo: GLIE 1/k         163.7                    166.1                     143.6            -20.1
+ Monte Carlo:                  165.2                    166.2                     144.5            -20.7
+ Optimistic init
+ Monte Carlo: Near-            165.8                    166.2                     146.7            -19.1
+ greedy (0.02)
+
+
+Table 5 reports true returns when the no-show rate is higher or lower than in the log. Lower no-show
+rates are worse for everyone: the rule falls by 23.5 units, DP by 20.4, and the learners by between 18.4
+and 22.9. A fall in no-shows means that the booking made for the nominal rate produces more overtime,
+so this is the direction in which overbooking policies are exposed. The learned policies lose less than the
+rule: all 10 of 10 learner-schedule cells are above the rule at -0.05, by 2.2 to 14.4 units, compared with 10
+of 10 at nominal rates (by 1.0 to 9.2); the mean margin over the rule is 8.0 at -0.05 against 4.8 at
+nominal, so the margin grows when no-shows fall, although part of the margin already exists without any
+shift. At +0.08 the picture is different: the rule gains 5.7, and every learned configuration lies within 0.8
+units of it (all entries between 165.4 and 166.7), so the learned policies have no visible advantage or
+disadvantage when there are more no-shows.
+
+
+
+
+Figure 4. True return under the nominal and shifted no-show rates for the rule, DP and the exponentially decaying
+schedule of each learner.
+
+Figure 4 shows the same for the four policies that the figure includes. The advantage of the learned
+policies at -0.05 is the largest result of the shift study (+14.4 for Q-learning, +10.7 for DP and +5.7 for
+MC relative to the rule), and it is consistent across all ten configurations, which gives some confidence it
+is not an accident of one schedule. Two caveats limit it. First, no intervals were stored, and the
+benchmark noise gauge above (about 5 units) is comparable to some of the advantages; the 10 of 10
+count is the more reliable evidence than any individual difference. Second, the rule is a single policy with
+no learning noise while the learned entries average over replicates, so the comparison is not symmetric.
+We did not evaluate the oracle under shift, so we cannot say how far any of these policies is from the
+best possible policy in the shifted clinics, and we did not identify which states produce the advantage; the
+learned policies differ from the rule in only 8 to 11 states in replicate 0 (Figure 2), so the effect must
+come from a small set of cells that the shift makes more frequent, which is a hypothesis.
+
+                                  Clinic overbooking, exploration and shift | Page 9
+8. Discussion
+What the study shows. (1) Learners trained on 150 episodes are ahead of the overbooking rule in the
+true simulator by +1.9 to +6.3 units on average, with only MC clearly so (p = 0.036), while a model
+fitted to ten times the data is ahead by +18.7, which points to data coverage rather than the learner as the
+main barrier (we did not vary the data volume continuously). (2) On the fitted model every schedule
+converges to about the same value, and none reaches 90% of the possible improvement (0 of 60 runs).
+(3) The one clearly resolved schedule effect is that a near-greedy Q-learner learns more slowly. (4) The
+learned policies are ahead of the rule at the nominal rate and by a larger average margin when no-shows
+fall (8.0 against 4.8; all 10 of 10 configurations), and level with it when no-shows rise.
+What it does not show. It does not show that exploration schedules matter for final performance: the
+final model-scale values are all within 0.13 of the behaviour policy's, and the true-return differences
+across schedules are comparable to the run-to-run discrepancy for the same configuration. It does not
+show that the model-scale metric is a good proxy for true return; its sign disagrees with the true
+comparison, and its schedule ranking correlates with true return for Q-learning (+1.00) but hardly for MC
+(+0.30). And it does not show which states drive the robustness result.
+Practical use. Because exploration inside a fitted model does not collect new data, practitioners should
+spend effort on what generates the log. A behaviour policy with deliberate variation in the number of
+extra bookings, run at low stakes, would give the learner support for the actions the optimum uses; the
+exploration schedule of the learner cannot substitute for that. For deployment the shift study suggests a
+cheap sanity check: re-evaluate a learned policy against the existing rule under plausible no-show shifts
+and report the range, not the nominal value alone.
+
+9. Limitations and threats to validity
+   Few replicates and no intervals for shift. The schedule study uses 6 replicates (t-interval factor
+    1.31) and the shift table stores no intervals; the DP entry is one replicate.
+   Unequal evaluation sizes. Rule and DP in the shift table use 300 evaluation episodes, the learners
+    120 per run; the benchmark and the schedule study use different data seeds.
+   A model-scale metric. Learning efficiency is measured on the oracle model, which is pessimistic by
+    construction for pairs with fewer than 10 observations; the AUC also contains a common step-0
+    offset of -0.122. The ranking of schedules on this scale need not match the ranking in the clinic.
+   Exploration inside a model. The schedules sample from the fitted MDP and cannot reveal unlogged
+    state-action pairs, so the study cannot say anything about exploration in the real environment, where
+    a clinic would face costs of trying.
+   Assumed no-show structure. The shift is a constant offset to the no-show rate; real shifts also
+    change who is booked and the waiting-list inflow. The simulator's reward weights (3 for overtime,
+    0.4 for waiting) are invented.
+   Simulated, not clinical, evidence. All numbers come from stylised simulators written for this study.
+    They demonstrate how the algorithms behave when the ground truth is known; they say nothing
+    about the safety or benefit of any treatment in people.
+   State aggregation. Continuous physiology is discretised into bands. Banding makes the process only
+    approximately Markov, and part of the gap between the DP policy on the estimated model and the
+    true optimum is a modelling gap rather than a sampling gap.
+   Fixed-horizon episodes treated as stationary. Episodes end after a fixed number of steps but the
+    state does not always contain the clock, so the estimated model treats termination as a constant
+    hazard. This distorts absolute model values (not true-simulator scores) and is why model-based value
+    estimates are compared only on a common oracle model.
+   Behaviour policy. The logged data come from a single ε-noisy rule. Coverage of non-rule actions is
+    therefore thin, which is exactly the offline-RL situation, and results depend on that coverage.
+
+
+
+                                Clinic overbooking, exploration and shift | Page 10
+   Hand-set hyper-parameters. ε schedules, step sizes and the support threshold were fixed in
+    advance and not tuned per paper.
+
+10. Ethical considerations and future work
+Ethics. No human data were used, so no consent or privacy issues arise in this study. If the method were
+applied to real records, three safeguards would be essential: de-identification and governance approval of
+the source data; a clinician-in-the-loop design in which the learned policy is advisory, with hard
+guardrails on unsafe actions; and prospective, randomised or at least carefully monitored evaluation
+before any deployment. Reinforcement learning from logs inherits the biases of the clinicians who
+produced them, and may under-serve groups that are under-represented in the data; subgroup
+performance should be reported alongside averages.
+Future work. (1) Add an exploration-aware behaviour policy that deliberately varies the extra bookings
+and test whether the learners then close the gap to the oracle; (2) store per-replicate learning curves and
+shift results to attach intervals and paired tests; (3) evaluate the oracle and a DP policy under shift, and a
+policy trained on shifted data, to measure the cost of a stale model; (4) compare against a model-based
+safeguard such as a pessimistic penalty in the supported part of the space; (5) apply the adapter to a real
+no-show table, where overtime and waiting would need to be defined from visit timestamps.
+
+11. Conclusion
+On a simulated clinic, DP, MC and Q-learning trained on 150 logged days scored 162.2, 166.6 and 164.4
+against 160.3 for a conservative overbooking rule and 179.0 for DP trained on ten times as much data.
+Five exploration schedules gave learning curves that all plateaued at the same model value: none reached
+90% of the possible improvement (0 of 60), only the near-greedy Q-learner was clearly slower, and the
+ordering of schedules on true return differed between learners and was comparable in size to the seed-to-
+seed discrepancy. The learned policies lost less than the rule when no-shows fell by 0.05 (all 10 of 10
+configurations were ahead) and matched it when they rose by 0.08. These are simulator results, not
+evidence about real clinics.
+
+Appendix A. Anticipated reviewer questions
+The following questions are the ones a reviewer or examiner is most likely to raise. Each answer is tied
+to a number or figure produced by the code.
+Q1. Why does no schedule reach 90% of the optimum?
+    The learners solve a fitted model whose DP solution is worth about 122.7 on the oracle model,
+    against a rule value of 125.6 and an optimum of 150.0. They converge to that solution (plateaus
+    122.4 and 123.3), so the target is out of reach for any schedule; the limit is the support of the logged
+    data, not exploration.
+Q2. If exploration does not matter, why is near-greedy Q-learning slower?
+    Near-greedy Q-learning has a mean AUC of -0.54 against -0.05 for the best schedule, and a plausible
+    reason (not tested separately) is that it tries few actions early and needs many steps to correct its
+    initial values. That is a speed effect within a fixed model; it disappears from the final values, which
+    are all indistinguishable from zero.
+Q3. Why do the model-scale and true-simulator comparisons disagree?
+    The model treats rarely logged pairs as absorbing with the worst reward, so it undervalues every
+    policy by 29 to 43 units and penalises choices the data do not support. On that scale the learners are
+    2.3 to 3.2 below the rule, while in the true simulator they are ahead of it. The model scale is useful
+    for learning speed, not for deciding which policy is better.
+Q4. Can we conclude that exponential decay is best for Q-learning?
+
+                                 Clinic overbooking, exploration and shift | Page 11
+    No. Its true return in the schedule study (169.5) differs by 5.1 from the same configuration in the
+    benchmark (164.4), which is comparable to the 8.3-unit spread across all five Q-learning schedules,
+    and the same schedule is the worst for MC.
+Q5. Is the robustness result a reason to deploy the learned policy?
+    No. It is a simulated shift of a single parameter, with no intervals, evaluated on a policy that differs
+    from the rule in few states. It shows that the learned policies do not lose more than the rule when no-
+    shows fall, in all 10 of 10 configurations, and nothing more.
+Q6. Why does the oracle score so much more than the learners?
+    With 1,500 episodes the high-overbooking actions are supported (about 30 visits per pair against
+    3.0), and the oracle uses +3 or +4 in 26 states. The learners use them in at most 4.
+
+Appendix B. Reproducibility
+All results in this paper are produced by `python ideas.py 7` (shared library: rl_core.py, domains.py,
+common.py). Random seeds are fixed in the code, so a re-run reproduces every table and figure. Figure
+files generated by the script: fig_bars, fig_learning, fig_policies, fig_agreement, fig_schedules,
+fig_efficiency, fig_shift. To repeat the study on a real Kaggle table, convert it with
+kaggle_adapter.transitions_from_dataframe, then call build_mdp, value_iteration, mc_control and
+q_learning exactly as the script does; because a real table has no simulator, report model-based estimates
+on a held-out split and label them as estimates.
+
+Appendix C. Source code of the experiment
+For completeness the exact source of the simulator and the experiment function is reproduced below; it is
+the same code that produced every number and figure in this paper (the shared solvers value_iteration,
+mc_control and q_learning are in rl_core.py and are delivered with the code package).
+Clinic
+    class Clinic(Domain):
+        name = "clinic"
+        nA, gamma, max_steps = 5, 0.97, 40
+        info_keys = ["shows", "overtime", "idle", "wait"]
+        CAP = 10
+        NE = [0.12, 0.18, 0.24]
+        nS = 5 * 4 * 5
+        action_labels = [f"+{k}" for k in range(5)]
+        MU = np.array([0.22, 0.17, 0.17, 0.18, 0.20])
+
+          def __init__(self, shift=0.0):
+              self.shift = shift
+
+          def _s(self):
+              return (self.t % 5 * 4 + band(self.p, self.NE)) * 5 + band(self.w, [1, 3, 6,
+    9])
+
+          def reset(self, rng):
+              self.p = float(np.clip(0.18 + self.shift + rng.normal(0, 0.03), 0.02, 0.6))
+              self.w, self.t = int(rng.integers(0, 6)), 0
+              return self._s()
+
+        def step(self, k, rng):
+            booked = self.CAP + k
+            shows = int(rng.binomial(booked, 1 - self.p))
+            over = max(0, shows - self.CAP)
+            idle = max(0, self.CAP - shows)
+            drawn = min(self.w, k)
+            r = 1.0 * shows - 3.0 * over - 0.5 * idle - 0.4 * self.w + 0.3 * drawn
+            self.w = int(np.clip(self.w - drawn + rng.poisson(1.5), 0, 12))
+            mu = self.MU[self.t % 5] + self.shift
+            self.p = float(np.clip(0.8 * self.p + 0.2 * mu + rng.normal(0, 0.02), 0.02,
+    0.6))
+
+
+
+                                Clinic overbooking, exploration and shift | Page 12
+              self.t += 1
+              info = dict(shows=shows, overtime=over, idle=idle, wait=self.w)
+              return self._s(), r, self.t >= self.max_steps, info, 1
+
+        def rule(self, s):
+            pb = (s // 5) % 4          # conservative practice: overbook by one, or two at
+    high no-show rates
+            return 1 if pb <= 1 else 2
+
+
+ideas.idea7
+    def idea7():
+        I = 7; d = odir(I)
+        dom = Clinic()
+        res = standard_benchmark(dom, n_eps=150, n_oracle=1500, steps=150000, seeds=5)
+        standard_figs(res, dom, I, title="Clinic overbooking MDP")
+        T = 150000
+        qopt = 14.0 * (1 - dom.gamma ** 40) / (1 - dom.gamma)
+        SCH = {"eps=0.1 const": (lambda k, t: 0.1, 0.0), "eps exp. decay": (eps_exp, 0.0),
+                "GLIE 1/k": (lambda k, t: max(0.02, (t / 50.0) / (t / 50.0 + k)), 0.0),
+                "Optimistic init": (lambda k, t: 0.02, 0.5 * qopt), "Near-greedy (0.02)":
+    (lambda k, t: 0.02, 0.0)}
+        SEEDS = 6
+        d_or = rollout(dom, dom.behavior, np.random.default_rng(9999), 1500); m_or =
+    build_mdp(d_or, dom)
+        pi_or, _, _ = value_iteration(m_or); J_opt = J(m_or, pi_or)
+        J_beh = J(m_or, behavior_mode(d_or, dom))
+        sh = {"nominal": Clinic(0.0), "no-show +0.08": Clinic(0.08), "no-show -0.05":
+    Clinic(-0.05)}
+        CUR = {a: {s: [] for s in SCH} for a in ("Q-learning", "Monte Carlo")}
+        FIN = {a: {s: {k: [] for k in sh} for s in SCH} for a in CUR}
+        for sd in range(SEEDS):
+             data = rollout(dom, dom.behavior, np.random.default_rng(700 + sd), 150)
+             m = build_mdp(data, dom); bm = behavior_mode(data, dom)
+             cf = (lambda p, m=m, bm=bm: J(m_or, fill_policy(p, m, bm)))
+             for sn, (ef, q0) in SCH.items():
+                 for an, fn in (("Q-learning", q_learning), ("Monte Carlo", mc_control)):
+                     p, _, c = fn(m, np.random.default_rng([sd, list(SCH).index(sn), 1]), T,
+    eps_fn=ef, q0=q0, ckpt_fn=cf)
+                     CUR[an][sn].append(c.tolist())
+                     p = fill_policy(p, m, bm)
+                     for k, sim in sh.items():
+                         r, _ = eval_policy(sim, p, n_eps=120)
+                         FIN[an][sn][k].append(float(r.mean()))
+             print("idea7 seed", sd, flush=True)
+        t90 = {a: {} for a in CUR}; auc = {a: {} for a in CUR}; fin = {a: {} for a in CUR}
+        for a in CUR:
+             for sn in SCH:
+                 cs = CUR[a][sn]
+                 tgt = J_beh + 0.9 * (J_opt - J_beh)
+                 t90[a][sn] = steps_to_fraction(cs, tgt)
+                 auc[a][sn] = [float(np.mean([(v[1] - J_beh) / (J_opt - J_beh) for v in c]))
+    for c in cs]
+                 fin[a][sn] = [float((c[-1][1] - J_beh) / (J_opt - J_beh)) for c in cs]
+        fig, axs = plt.subplots(1, 2, figsize=(8.0, 3.2), sharey=True)
+        for ax, a in zip(axs, CUR):
+             for i, sn in enumerate(SCH):
+                 arr = np.array(CUR[a][sn]); x = arr[0, :, 0]
+                 y = (arr[:, :, 1] - J_beh) / (J_opt - J_beh)
+                 ax.plot(x, y.mean(0), color=OKABE[i], label=sn, lw=1.6)
+                 ax.fill_between(x, y.mean(0) - y.std(0, ddof=1), y.mean(0) + y.std(0,
+    ddof=1), color=OKABE[i], alpha=0.12)
+             ax.axhline(1, color="k", ls="--", lw=0.8); ax.axhline(0, color="#777777",
+    ls=":", lw=0.8)
+             ax.set_title(a, fontsize=9); ax.set_xlabel("Environment steps")
+        axs[0].set_ylabel("Normalised value (0 = clinic behaviour, 1 = DP optimum)");
+    axs[0].legend(fontsize=7)
+        fig.savefig(f"{d}/fig_schedules.png"); plt.close(fig)
+        fig, axs = plt.subplots(1, 2, figsize=(8.0, 3.0))
+        for ai, a in enumerate(CUR):
+             v = [np.nanmean(t90[a][s]) / 1000 for s in SCH]
+             axs[0].bar(np.arange(len(SCH)) + (ai - 0.5) * 0.38, v, 0.38, color=COL[a],
+    label=a)
+
+
+                             Clinic overbooking, exploration and shift | Page 13
+             axs[1].bar(np.arange(len(SCH)) + (ai - 0.5) * 0.38, [np.mean(auc[a][s]) for s
+    in SCH], 0.38, yerr=[ci95(auc[a][s]) for s in SCH], color=COL[a], capsize=2)
+        for ax in axs: ax.set_xticks(range(len(SCH))); ax.set_xticklabels(list(SCH),
+    rotation=25, ha="right", fontsize=7)
+        axs[0].set_ylabel("Steps (thousands) to reach 90% of optimum\n(NaN-safe mean over
+    seeds that reach it)"); axs[1].set_ylabel("Area under learning curve (normalised)")
+        axs[0].legend(fontsize=7); fig.savefig(f"{d}/fig_efficiency.png"); plt.close(fig)
+        # shift robustness (best schedule per algorithm = eps exp)
+        fig, ax = plt.subplots(figsize=(5.2, 3.2))
+        dp_pol = fill_policy(value_iteration(build_mdp(rollout(dom, dom.behavior,
+    np.random.default_rng(700), 150), dom))[0],
+                               build_mdp(rollout(dom, dom.behavior,
+    np.random.default_rng(700), 150), dom), np.array([dom.rule(s) for s in range(dom.nS)]))
+        rule = np.array([dom.rule(s) for s in range(dom.nS)])
+        shift_res = {}
+        for k, sim in sh.items():
+             shift_res[k] = {}
+             for nm, p in (("Rule", rule), ("DP", dp_pol)):
+                 r, _ = eval_policy(sim, p, n_eps=300); shift_res[k][nm] = float(r.mean())
+             for a in CUR:
+                 shift_res[k][a + " (eps exp)"] = float(np.mean(FIN[a]["eps exp. decay"]
+    [k]))
+        ks = list(sh); w = 0.2
+        for i, nm in enumerate(["Rule", "DP", "Q-learning (eps exp)", "Monte Carlo (eps
+    exp)"]):
+             ax.bar(np.arange(len(ks)) + (i - 1.5) * w, [shift_res[k][nm] for k in ks], w,
+    label=nm, color=[COL["Rule"], COL["DP"], COL["Q-learning"], COL["Monte Carlo"]][i])
+        ax.set_xticks(range(len(ks))); ax.set_xticklabels(ks); ax.set_ylabel("True
+    return"); ax.legend(fontsize=7)
+        lo = min(v for k in ks for v in shift_res[k].values()); ax.set_ylim(lo * 0.9, None)
+        fig.savefig(f"{d}/fig_shift.png"); plt.close(fig)
+        out = dict(schedules=list(SCH), J_opt=J_opt, J_beh=J_beh,
+                    t90={a: {s: [None if np.isnan(x) else float(x) for x in t90[a][s]] for s
+    in SCH} for a in CUR},
+                    auc={a: {s: dict(mean=float(np.mean(auc[a][s])), ci=ci95(auc[a][s])) for
+    s in SCH} for a in CUR},
+                    final={a: {s: dict(mean=float(np.mean(fin[a][s])), ci=ci95(fin[a][s]))
+    for s in SCH} for a in CUR},
+                    shift={a: {s: {k: float(np.mean(FIN[a][s][k])) for k in sh} for s in
+    SCH} for a in CUR}, shift_ref=shift_res,
+                    reach_rate={a: {s: float(np.mean(~np.isnan(t90[a][s]))) for s in SCH}
+    for a in CUR}, standard=summarize(res))
+        save_json(I, "results", dict(out, extra=drop_models(res)))
+        return out
+
+
+rl_core: shared solvers
+    def build_mdp(data, dom, weights=None, chan=None, min_n=10, term_prior=1.0):
+        """Empirical (maximum-likelihood) MDP from logged transitions.
+        (s,a) pairs observed fewer than min_n times are completed pessimistically: they go
+        to the absorbing terminal state with the worst reward seen in the data."""
+        nS, nA = dom.nS, dom.nA
+        T = nS
+        w = np.ones(len(data["s"])) if weights is None else np.asarray(weights, float)
+        s, a = data["s"], data["a"]
+        s2 = np.where(data["done"] > 0, T, data["s2"])
+        N = np.zeros((nS + 1, nA, nS + 1))
+        np.add.at(N, (s, a, s2), w)
+        n = N.sum(2)
+        Rsum = np.zeros((nS + 1, nA))
+        np.add.at(Rsum, (s, a), w * data["r"])
+        Gsum = np.zeros((nS + 1, nA, nS + 1))
+        np.add.at(Gsum, (s, a, s2), w * dom.gamma ** data["dur"])
+        m = MDP()
+        m.nS, m.nA, m.gamma = nS, nA, dom.gamma
+        m.n = n
+        m.N = N
+        seen = n >= min_n           # support constraint: thinly observed (s,a) are
+    completed pessimistically
+        n_eff = n + term_prior        # one pseudo-observation of absorption guards against
+    'immortal' loops
+        P = np.zeros_like(N)
+        P[seen] = N[seen] / n_eff[seen][:, None]
+
+
+                            Clinic overbooking, exploration and shift | Page 14
+   P[seen, T] += term_prior / n_eff[seen]
+   G = np.full_like(N, dom.gamma)
+   nz = N > 0
+   G[nz] = Gsum[nz] / N[nz]
+   R = np.zeros((nS + 1, nA))
+   R[seen] = Rsum[seen] / n_eff[seen]
+   rmin = float(data["r"].min())
+   m.rmin, m.rmax = rmin, float(data["r"].max())
+   P[~seen, T] = 1.0
+   R[~seen] = rmin
+   P[T, :, :] = 0.0
+   P[T, :, T] = 1.0
+   R[T, :] = 0.0
+   m.P, m.G, m.R = P, G, R
+   m.PG = P * G
+   # reward channels
+   m.Rc = {}
+   for c in (chan if chan is not None else dom.chan):
+       cs = np.zeros((nS + 1, nA))
+       np.add.at(cs, (s, a), w * data[c])
+       cr = np.zeros((nS + 1, nA))
+       cr[seen] = cs[seen] / n_eff[seen]
+       m.Rc[c] = cr
+   # start distribution = first state of every episode
+   first = data["t"] == 0
+   mu = np.bincount(data["s"][first], minlength=nS + 1).astype(float)
+   m.mu = mu / mu.sum()
+   m.visits = (n * seen).sum(1)[:nS]
+   m.seen = seen
+   m.Rsum = Rsum
+   return m
+
+
+def value_iteration(m, R=None, mask=None, tol=1e-9, max_iter=20000, penalty=None):
+    R = m.R if R is None else R
+    if penalty is not None:
+        R = R - penalty
+    V = np.zeros(m.nS + 1)
+    for _ in range(max_iter):
+        Q = _q(m, V, R)
+        if mask is not None:
+            Q = np.where(mask, Q, -1e18)
+        Vn = Q.max(1)
+        Vn[m.nS] = 0.0
+        if np.abs(Vn - V).max() < tol:
+            V = Vn
+            break
+        V = Vn
+    Q = _q(m, V, R)
+    if mask is not None:
+        Q = np.where(mask, Q, -1e18)
+    pi = Q.argmax(1)[:m.nS]
+    return pi, V, Q
+
+
+def q_learning(m, rng, steps, eps_fn=eps_exp, alpha0=1.0, alpha_min=0.02,
+                q0=0.0, mask=None, n_ckpt=25, max_len=200, ckpt_fn=None):
+    nS, nA = m.nS, m.nA
+    ckpt_fn = ckpt_fn or (lambda p: J(m, p))
+    Q = np.full((nS + 1, nA), q0)
+    Q[nS] = 0.0
+    cnt = np.zeros((nS + 1, nA))
+    smp = Sampler(m, rng)
+    ck = np.unique(np.linspace(0, steps, n_ckpt + 1).astype(int))
+    curve = []
+    s, ep_t = smp.start(), 0
+    ci = 0
+    for k in range(steps + 1):
+        if ci < len(ck) and k == ck[ci]:
+            pi = np.array([_greedy(Q, x, mask) for x in range(nS)])
+            curve.append((k, ckpt_fn(pi)))
+            ci += 1
+        if k == steps:
+            break
+
+
+
+                       Clinic overbooking, exploration and shift | Page 15
+       if rng.random() < eps_fn(k, steps):
+           a = _explore(rng, s, nA, mask)
+       else:
+           a = _greedy(Q, s, mask)
+       s2, r, g = smp.step(s, a)
+       tgt = r + (0.0 if s2 == nS else g * Q[s2].max() if mask is None
+                  else g * np.where(mask[s2], Q[s2], -1e18).max())
+       cnt[s, a] += 1
+       al = max(alpha_min, alpha0 / (1.0 + cnt[s, a] ** 0.7))
+       Q[s, a] += al * (tgt - Q[s, a])
+       ep_t += 1
+       if s2 == nS or ep_t >= max_len:
+           s, ep_t = smp.start(), 0
+       else:
+           s = s2
+   pi = np.array([_greedy(Q, x, mask) for x in range(nS)])
+   return pi, Q, np.array(curve)
+
+
+def mc_control(m, rng, steps, eps_fn=eps_exp, q0=0.0, mask=None, n_ckpt=25,
+                max_len=200, ckpt_fn=None):
+    """first-visit Monte Carlo control with epsilon-soft behaviour policy and
+    incremental-average updates."""
+    nS, nA = m.nS, m.nA
+    ckpt_fn = ckpt_fn or (lambda p: J(m, p))
+    Q = np.full((nS + 1, nA), q0)
+    Q[nS] = 0.0
+    N = np.zeros((nS + 1, nA))
+    smp = Sampler(m, rng)
+    ck = np.unique(np.linspace(0, steps, n_ckpt + 1).astype(int))
+    curve = []
+    used, ci = 0, 0
+    while True:
+        while ci < len(ck) and used >= ck[ci]:
+            pi = np.array([_greedy(Q, x, mask) for x in range(nS)])
+            curve.append((ck[ci], ckpt_fn(pi)))
+            ci += 1
+        if used >= steps:
+            break
+        s = smp.start()
+        traj = []
+        for _ in range(max_len):
+            if rng.random() < eps_fn(used + len(traj), steps):
+                 a = _explore(rng, s, nA, mask)
+            else:
+                 a = _greedy(Q, s, mask)
+            s2, r, g = smp.step(s, a)
+            traj.append((s, a, r, g))
+            s = s2
+            if s2 == nS:
+                 break
+        used += len(traj)
+        # returns, backwards; first-visit
+        Gret = 0.0
+        rets = []
+        for (s_, a_, r_, g_) in reversed(traj):
+            Gret = r_ + g_ * Gret
+            rets.append(Gret)
+        rets.reverse()
+        seen = set()
+        for (s_, a_, _, _), G_ in zip(traj, rets):
+            if (s_, a_) in seen:
+                 continue
+            seen.add((s_, a_))
+            N[s_, a_] += 1
+            Q[s_, a_] += (G_ - Q[s_, a_]) / N[s_, a_]
+    pi = np.array([_greedy(Q, x, mask) for x in range(nS)])
+    return pi, Q, np.array(curve)
+
+
+
+
+                       Clinic overbooking, exploration and shift | Page 16
+References
+[1] Gupta, D. and Denton, B. Appointment scheduling in health care: challenges and opportunities. IIE Transactions
+     40(9):800-819, 2008.
+[2] Zacharias, C. and Pinedo, M. Appointment scheduling with no-shows and overbooking. Production and Operations
+     Management 23(5):788-801, 2014.
+[3] Sutton, R. S. and Barto, A. G. Reinforcement Learning: An Introduction, 2nd ed. MIT Press, 2018.
+[4] Singh, S., Jaakkola, T., Littman, M. L. and Szepesvari, C. Convergence results for single-step on-policy
+     reinforcement-learning algorithms. Machine Learning 38(3):287-308, 2000.
+[5] Brafman, R. I. and Tennenholtz, M. R-max - a general polynomial time algorithm for near-optimal reinforcement
+     learning. Journal of Machine Learning Research 3:213-231, 2002.
+[6] Watkins, C. J. C. H. and Dayan, P. Q-learning. Machine Learning 8(3-4):279-292, 1992.
+[7] Even-Dar, E. and Mansour, Y. Learning rates for Q-learning. Journal of Machine Learning Research 5:1-25, 2003.
+[8] Levine, S., Kumar, A., Tucker, G. and Fu, J. Offline reinforcement learning: tutorial, review, and perspectives on open
+      problems. arXiv:2005.01643, 2020.
+[9] Jin, Y., Yang, Z. and Wang, Z. Is pessimism provably efficient for offline RL? Proceedings of the 38th International
+      Conference on Machine Learning (ICML), 2021.
+[10] Kumar, A., Zhou, A., Tucker, G. and Levine, S. Conservative Q-learning for offline reinforcement learning.
+      Advances in Neural Information Processing Systems 33, 2020.
+[11] Bellman, R. Dynamic Programming. Princeton University Press, 1957.
+[12] Puterman, M. L. Markov Decision Processes: Discrete Stochastic Dynamic Programming. Wiley, 1994.
+[13] Singh, S. P. and Sutton, R. S. Reinforcement learning with replacing eligibility traces. Machine Learning 22:123-
+     158, 1996.
+
+
+
+
+                                     Clinic overbooking, exploration and shift | Page 17
+

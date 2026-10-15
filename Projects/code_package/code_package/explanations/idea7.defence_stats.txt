@@ -1,0 +1,2 @@
+== paired tests in idea 7 (difference, 95% CI half-width, p) ==
+saved out/idea07/defence_dashboard.png

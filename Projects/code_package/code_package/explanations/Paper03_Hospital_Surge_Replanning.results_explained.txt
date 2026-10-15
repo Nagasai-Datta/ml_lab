@@ -1,0 +1,146 @@
+7. Results
+7.1 Baseline demand: learning does not beat a good rule
+Table 3. Baseline demand. Discounted return over a 28-day episode and mean episode counts (5 replicates; true
+simulator).
+    Method                 Return (mean ±         Admitted              Overflow                Diverted          Early d/c
+                              95% CI)
+    Clinician               100.41 ± 0.10           229.01                 4.02                   0.96              30.97
+    behaviour (modal
+    logged action)
+    Guideline rule          100.51 ± 0.00           229.01                 3.99                   0.99              31.02
+    DP on estimated          99.49 ± 0.87           228.50                 3.97                   1.49              31.09
+    MDP
+    Monte Carlo             86.41 ± 3.48            220.29                 3.06                  10.67              30.57
+    control
+    Q-learning              96.26 ± 2.08            226.96                 3.63                   3.47              32.13
+    Oracle DP (7.5x         99.81 ± 0.00            226.31                 3.93                   3.69              25.99
+    data)
+
+
+Table 3 shows that planning on the estimated MDP essentially reproduces the occupancy rule: DP scores
+99.5 ± 0.9 against 100.5 for the rule, and even the oracle DP (7.5 times more data) scores 99.8. This is
+not a failure of the solver - the DP and policy-iteration solutions agreed in every replicate - but a property
+of the problem: the rule was written by someone who understood it, so a policy that is optimal for the
+estimated, state-aggregated model has little left to find. Q-learning is below the rule (96.3 ± 2.1). Monte
+Carlo is clearly worse (86.4 ± 3.5); its policies divert about 10.7 patients per episode against 1.0 for the
+rule, presumably because diversion has a high-variance, rarely-observed outcome that the episode-level
+returns estimate noisily.
+
+
+
+
+                                        Surge-aware replanning for hospital capacity | Page 5
+Figure 1. Learning curves on the oracle MDP (mean ± s.d. over 5 replicates). Q-learning rises within about 10,000 steps
+and plateaus below the DP optimum (dashed); Monte Carlo plateaus lower and wider.
+
+Figure 1 explains the ranking. Q-learning's bootstrapping spreads reward information through the 490-
+state chain quickly; MC must wait for entire 28-day episodes and averages a long, noisy return into every
+update, so its plateau is both lower and more variable between replicates. Neither method reaches the DP
+optimum on the oracle MDP (Q-learning plateaus near 72 and Monte Carlo near 63, against 81 for the
+oracle DP and 78 for the rule); both learn from the same finite log that DP uses, and here the price of not
+solving the model exactly is not small. Averaged over replicates, Q-learning agreed with the DP policy in
+96% of well-visited states and Monte Carlo in 87%.
+
+
+
+
+Figure 2. True-simulator return by method under baseline demand (error bars: 95% CI over replicates).
+
+
+
+
+                                   Surge-aware replanning for hospital capacity | Page 6
+Figure 3. Action chosen by each method in every state observed in the oracle data (colours: admit / early-discharge /
+divert). The learned policies DP and Q-learning largely reproduce the behaviour rule; Monte Carlo and the oracle DP
+deviate in scattered states, Monte Carlo including many low-occupancy ones.
+
+7.2 Demand surge: every baseline-trained policy fails
+We now raise arrivals by 30% without changing anything else. Table 4 (below) shows that a policy
+trained on baseline data - or the occupancy rule itself - collapses: the static policy's return falls from 98.5
+(baseline) to -9.9 ± 1.4 under surge, and the rule scores -10.5. A policy trained on an abundance of surge
+data (6,000 episodes) obtains 28.3. The gap of about 38 points is the value of knowing the regime; it is
+also an upper bound on what any adaptation scheme can recover from a few weeks of data.
+Table 4. Return under the +30% surge, by replanning variant and number of surge episodes available (mean ± 95% CI, 6
+replicates). Surge-trained oracle: 28.3; occupancy rule: -10.5.
+ Surge episodes          0                5                 10                20              40             80
+ Static (baseline    -9.9 ± 1.4       -9.9 ± 1.4        -9.9 ± 1.4        -9.9 ± 1.4      -9.9 ± 1.4     -9.9 ± 1.4
+ only)
+ Pooled, equal       -9.9 ± 1.4       -9.9 ± 1.8        -9.5 ± 2.1        -9.4 ± 1.8      -6.5 ± 1.3     -2.9 ± 1.4
+ weight
+ Pooled, recency     -9.9 ± 1.4       -6.5 ± 3.0        -6.4 ± 3.8        -1.8 ± 4.6      -0.1 ± 4.4     3.8 ± 4.9
+ x10
+ Surge data only     -9.9 ± 1.4      -11.4 ± 0.0       -11.4 ± 0.0        -11.4 ± 0.0     -12.0 ± 0.7   -12.7 ± 1.4
+
+
+
+
+                                  Surge-aware replanning for hospital capacity | Page 7
+7.3 Adaptation: how much surge data, and how to use it
+
+
+
+
+Figure 4. Return under surge as surge episodes accumulate. Recency-weighted pooling (ω = 10) improves with more
+data, though noisily; equal-weight pooling needs many more episodes; using surge data alone does not help (nominally
+below the static policy). Error bars: 95% CI over 6 replicates.
+
+Figure 4 is the central result. Four observations follow. (1) Recency weighting works. With ω = 10 the
+return improves from -9.9 to -6.5 after only 5 surge episodes (140 days) and to -1.8 after 20; at 20
+episodes the improvement over the static policy is 8.1 ± 3.6 (p = 0.007, paired over replicates). At 80
+episodes it reaches 3.8, although the confidence interval (± 4.9) is wide. (2) Equal-weight pooling is
+slow. The 800 baseline episodes swamp the new data; with ω = 1 nothing changes until 40 episodes (-
+6.5) and the return is still -2.9 at 80. (3) Surge data alone does not help. With ω → ∞ and the old data
+removed, the return is -11.4 at 5 episodes and -12.7 at 80, nominally below the static policy (-9.9); the
+paired difference at 20 episodes is -1.4 ± 1.4 (p = 0.106), so we cannot call it harmful, only not helpful.
+At 5 episodes the recency-weighted variant beats it by 4.9 ± 3.0 (p = 0.024). The surge-only return is
+identical across replicates at 5, 10 and 20 episodes (zero spread), which suggests that the support
+threshold leaves almost all of the 1,470 state-action pairs unsupported so that the policy falls back to the
+clinician rule (we did not verify this directly); its baseline return is also not reduced (99.3), consistent
+with that reading. (4) The remaining gap is large. Even at 80 episodes, adaptation recovers only about
+36% of the 38-point gap to the oracle (and about 21% at 20 episodes); the oracle used 75 times more
+surge data.
+
+
+
+
+                                  Surge-aware replanning for hospital capacity | Page 8
+Figure 5. Regret check: return under the original demand for the same policies. Recency-weighted replanning gives up
+some baseline performance as it forgets the old regime.
+
+Figure 5 shows the price of adapting. If demand returns to normal, the recency-weighted policy built
+from 80 surge episodes scores 94.2 instead of 98.5, a regret of 4.3. Equal-weight pooling loses less
+(97.3), which is the mirror image of its slower adaptation, and surge-only replanning loses nothing here.
+The regret curves have no error bars (means of 6 replicates). The two figures together define a frontier:
+more weight on new data buys return under the surge and costs return in the old regime.
+7.4 The adaptation-regret frontier
+Table 5. Recency-weight sweep: return under surge / return under baseline demand (6 replicates).
+ ω                             10 episodes: surge / baseline   20 episodes: surge / baseline   40 episodes: surge / baseline
+ 1                                      -9.5 / 98.3                     -9.4 / 98.3                     -6.5 / 97.6
+ 3                                      -9.3 / 97.8                     -6.8 / 97.9                     -0.4 / 96.8
+ 10                                     -6.4 / 97.6                     -1.8 / 96.7                     -0.1 / 96.1
+ 30                                     -6.8 / 94.6                     -3.1 / 92.8                     0.0 / 92.9
+ 100                                    -6.8 / 92.6                     -4.1 / 86.6                     -1.2 / 86.1
+
+
+
+
+Figure 6. Left: surge return versus the recency weight ω for 10, 20 and 40 surge episodes. Right: the same points traced
+on the surge-versus-baseline plane; moving right-to-left along a curve trades baseline return for surge return.
+
+Figure 6 shows that the surge return rises with ω and then saturates or declines, while baseline return
+falls monotonically. With 10 surge episodes the best surge return (-6.4) is obtained at ω = 10. With 20
+surge episodes the best surge return (-1.8) is obtained at ω = 10. With 40 surge episodes the best surge
+return (0.0) is obtained at ω = 30. The differences among ω = 10, 30 and 100 are small relative to the
+confidence intervals (several intervals span 5 points or more), so the location of the optimum is not
+resolved; what is resolved is that ω = 1 is clearly worse than ω ≥ 3 at 40 episodes (nominally also at 20,
+
+
+                                   Surge-aware replanning for hospital capacity | Page 9
+where the intervals overlap) and that baseline return keeps falling as ω grows. The closed-form guide in
+Eq. (5) predicts that the optimal weight should be of order one to a few tens for the per-cell counts in this
+problem, which is roughly consistent in order of magnitude with the sweep (the sweep favours somewhat
+larger values than the worked examples of Eq. (5)); because the shift Δ differs between cells, the sweep
+is a more reliable guide than the formula, which should be read as an explanation of the trend (heavier
+weight on new data when the old sample is large or the shift is big) rather than as a prescription.
+
+8. Discussion

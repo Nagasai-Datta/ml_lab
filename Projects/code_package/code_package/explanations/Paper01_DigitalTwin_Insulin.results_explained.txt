@@ -1,0 +1,204 @@
+7. Results
+7.1 Single patient: three solvers versus the logged rule
+Table 3. Single simulated patient (sens = 1). True-simulator return and clinical channels per 24-hour day (5 replicates,
+95% CI). The rule and the oracle are single deterministic policies, so their CI is zero by construction.
+    Method                     Return (mean ± 95%          In-range h/day               Hypo h/day               Insulin u/day
+                                       CI)
+    Clinician behaviour            13.00 ± 0.00                 21.48                      0.00                      24.93
+    (modal logged action)
+    Guideline rule                13.00 ± 0.00                  21.48                      0.00                      24.93
+    DP on estimated MDP           12.41 ± 0.83                  21.07                      0.00                      24.70
+    Monte Carlo control           13.01 ± 1.07                  21.52                      0.00                      25.04
+    Q-learning                    12.25 ± 1.10                  20.97                      0.00                      25.48
+    Oracle DP (10x data)          15.24 ± 0.00                  23.56                      0.00                      40.91
+
+
+
+                                                 Digital-twin insulin dosing | Page 5
+Table 3 is the baseline. DP from 150 days scores 12.41 ± 0.83, Monte Carlo 13.01 ± 1.07 and Q-learning
+12.25 ± 1.10, against 13.00 for the rule. Paired over replicates the differences from the rule are -0.59 ±
+0.83 (p = 0.236) for DP, +0.01 ± 1.07 (p = 0.989) for Monte Carlo and -0.76 ± 1.10 (p = 0.248) for Q-
+learning, so none of the three is distinguishable from the rule. Replicate by replicate, DP was worse than
+the rule in 2 of 5 runs, equal in 2 and better in 1; when it equalled the rule the learned policy simply
+reproduced it. Yet the oracle DP fitted to 1,500 days scores 15.24, which is 2.24 above the rule (on the
+oracle model the same gap is 2.00, 12.27 versus 10.27; absolute model values are lower than simulator
+values because the model includes a terminal pseudo-count). Headroom therefore exists, and it comes
+with more insulin (40.9 units per day against 24.9) and more in-range time (23.6 h against 21.5) with no
+hypoglycaemic hours recorded for any method in this table. The headroom is out of reach of 150 days of
+logs, and the learners' wide intervals (0.8 to 1.1) exceed any difference among DP, Monte Carlo and Q-
+learning.
+
+
+
+
+Figure 1. Learning curves on the oracle MDP (mean ± s.d. over 5 replicates). Dashed: oracle DP optimum; dotted: rule.
+
+Figure 1 shows learning dynamics. Both solvers jump from near zero to about 10.3 (Q-learning) and 10.3
+(Monte Carlo) within the first checkpoint at 4,800 steps and then stop improving: averaged over the last
+ten checkpoints Q-learning sits at 9.9 (s.d. across checkpoints and replicates 0.7) and Monte Carlo ends
+at 10.3, against 10.27 for the rule and 12.27 for the oracle on the same model. The plateau is set by data,
+not by compute. The additional steps only replay a model whose supported cells do not contain a better
+policy. Q-learning also oscillates, plausibly because its greedy policy flips between near-equal actions in
+cells with few samples (we did not test this).
+
+
+
+
+Figure 2. Dose chosen by each method in each state observed in the oracle data (colour: 0 to 3 units). The learned
+policies resemble the behaviour policy; the oracle DP uses 3 u in many more states.
+
+Figure 2 explains why. Of the 36 states, the learned policies differ from the rule in only 13 (DP), 12
+(Monte Carlo) and 11 (Q-learning) while the oracle differs in 18; the oracle uses the 3-unit dose in 8
+states against 6 for the rule. With ε = 0.25 each non-rule dose is tried in about 6% of visits, so with 3,600
+logged transitions (150 days × 24 hours) only the busiest states accumulate the 10 observations needed to
+support a non-rule dose. Elsewhere, the support threshold forces the solver back to the rule. This is
+intended conservatism, and it caps what 150 days can achieve. Learner agreement with DP in well-
+
+
+                                           Digital-twin insulin dosing | Page 6
+visited states was 92% for Q-learning and 86% for Monte Carlo (the agreement figure is fig_agreement
+in the code package), which says that the model-free methods recover the DP policy where there is data
+to do so. The optimism gap (value of the DP policy on its own estimated model minus its value on the
+oracle model) was positive in 3 of 5 replicates, so estimated models are not reliably optimistic or
+pessimistic here.
+7.2 The personalisation ceiling and the cost of using only the patient's own data
+Table 4. Reference policies on 20 new patients per heterogeneity level (mean ± 95% CI over patients; paired differences
+with p-values). Individual uses 7 days of the patient's own data.
+ σ                      Rule           Pooled          Indiv. (7 d)       Oracle twin    Oracle − Pooled   Indiv. − Pooled
+ 0.15               12.75 ± 0.37     14.42 ± 0.14      12.75 ± 0.37       14.90 ± 0.23    +0.48 ± 0.14       -1.67 ± 0.23
+                                                                                           (p<0.001)          (p<0.001)
+ 0.3                13.38 ± 0.93     14.58 ± 0.56      13.38 ± 0.93       15.21 ± 0.54    +0.64 ± 0.29       -1.19 ± 0.48
+                                                                                           (p<0.001)          (p<0.001)
+ 0.5                11.47 ± 1.23     13.65 ± 0.90      11.47 ± 1.23       14.26 ± 0.76    +0.61 ± 0.19       -2.18 ± 0.36
+                                                                                           (p<0.001)          (p<0.001)
+ 0.8                11.27 ± 2.15     13.00 ± 1.58      11.23 ± 2.18       13.48 ± 1.49    +0.49 ± 0.22       -1.77 ± 0.69
+                                                                                           (p<0.001)          (p<0.001)
+
+
+
+Table 4 contains the two facts on which the rest of the paper rests. First, a population policy built from
+800 days of other patients' logs beats the logged rule at every heterogeneity level: by +1.67 (σ = 0.15),
++1.19 (σ = 0.3), +2.18 (σ = 0.5), +1.73 (σ = 0.8). The pooled policy trained on 800 days across patients
+does what the single-patient benchmark could not do with 150 days. (This comparison confounds data
+quantity with population diversity, since diverse patients also visit more states and so act as exploration;
+the experiments cannot separate the two.) Second, an oracle twin fitted to 2,000 days of the patient's own
+data beats the pooled policy by 0.48 to 0.64, with every paired test at p < 0.001, and the oracle twin is the
+better policy for 85%, 85%, 100%, 90% of patients (σ = 0.15, 0.3, 0.5, 0.8, respectively). The ceiling is
+real but modest, roughly 3.4% to 4.5% of the pooled return, and it does not grow monotonically with
+heterogeneity: it is 0.48, 0.64, 0.61 and 0.49, with overlapping intervals. We expected the opposite and
+did not investigate why. One candidate is that a wider population also gives the pooled model broader
+coverage of sensitivities.
+The third column group of Table 4 is the cautionary result. A twin built only from the patient's own 7
+days is worse than the pooled policy by 1.19 to 2.18 return units at every σ (all p < 0.001), that is, worse
+than the pooled policy by more than the oracle twin gains over it. The likely cause is the support
+constraint: in 7 of the 16 (σ, days) cells the individual-only policy has exactly the same return as the rule,
+which happens when in nearly every state only the rule's own dose has 10 observations, so the planner
+has nothing else it may choose. Where it differs (for example at 28 days) it is still no better than the rule:
+at σ = 0.15 it scores 12.32 against 12.75. Learning a patient model from days of data, with no prior,
+throws away the large amount of information that the population provides.
+
+
+
+
+Figure 3. Return gain relative to the pooled policy at 7 days of patient data, by heterogeneity (mean ± 95% CI over 20
+patients). Black dashed: oracle twin (ceiling). Coloured: shrunk twins. Orange: individual-only.
+
+
+
+                                           Digital-twin insulin dosing | Page 7
+Figure 3 makes the contrast visible. The ceiling is the dashed black line above zero; individual-only is
+the orange line far below; the three shrunk twins hover around zero, with intervals that cross zero in most
+places. Shrinkage thus moves the estimator from the harmful orange region to approximately the pooled
+policy, and only occasionally above it.
+7.3 Shrunk twins versus the pooled policy
+Table 5. Shrunk twin minus pooled policy at 7 days of patient data (mean ± 95% CI over 20 patients; paired t-test).
+ λ                                 σ = 0.15                     σ = 0.3                    σ = 0.5                    σ = 0.8
+ 10                        -0.24 ± 0.43 (p = 0.287)     +0.11 ± 0.34 (p = 0.539)   -0.16 ± 0.24 (p = 0.214)   -0.14 ± 0.29 (p = 0.346)
+ 30                        -0.11 ± 0.33 (p = 0.522)     +0.34 ± 0.22 (p = 0.007)   +0.03 ± 0.09 (p = 0.552)   -0.01 ± 0.21 (p = 0.898)
+ 100                       -0.16 ± 0.32 (p = 0.322)     +0.27 ± 0.18 (p = 0.007)   +0.01 ± 0.07 (p = 0.757)   +0.15 ± 0.11 (p = 0.019)
+
+
+
+Table 5 is the primary test of the twin. The shrunk twin is significantly better than the pooled policy in 3
+of 12 cells (λ = 30, σ = 0.3: +0.34, p = 0.007; λ = 100, σ = 0.3: +0.27, p = 0.007; λ = 100, σ = 0.8: +0.15,
+p = 0.019) and significantly worse in 0. The mean difference is negative in 6 of 12 cells. The largest gain
+is +0.34 ± 0.22 at λ = 30 and σ = 0.3, which is 53% of the ceiling for that σ (0.64); elsewhere the twin
+recovers essentially none of it. Against the individual-only model, by contrast, at 7 days every shrunk
+twin is better by 1.30 to 2.21 (largest p-value p < 0.001), so the shrinkage works as a safeguard even
+though it is not a source of consistent gains. The best λ at 7 days is 30 (σ = 0.15), 30 (σ = 0.3), 30 (σ =
+0.5), 100 (σ = 0.8); differences between λ values are well inside the intervals (λ = 10 had the lowest mean
+return of the three in 12 of 16 (σ, days) cells), so no pattern in λ can be claimed and Eq. (5)'s prediction
+of smaller λ for larger σ is neither supported nor refuted.
+
+
+
+
+Figure 4. True return as a function of the patient's own days, at each heterogeneity level (mean ± 95% CI over 20
+patients). The rule, pooled and oracle lines are flat by construction.
+
+Figure 4 shows the data-quantity dimension. If more of the patient's own data made the twin better, the
+coloured lines would rise toward the dashed black ceiling. They do not. The twins show no consistent
+rise toward the oracle with more days; at 28 days several twins fall below the pooled policy (for σ = 0.15:
+λ = 10 scores 13.28, pooled 14.42) and their intervals widen sharply. Individual-only (orange) stays on
+the rule. A sensible reading is that, in this tabular representation, adding days increases the number of
+cells where the patient's counts are just enough to dominate a prior of strength λ but not enough to be
+accurate, so more data may move the estimate away from a good prior toward a noisy one (a hypothesis
+we did not test).
+Table 6. Shrunk twin (λ = 30) minus pooled, by amount of patient data (mean difference over 20 patients; p-value in
+parentheses).
+ σ                                  3d                            7d                           14 d                    28 d
+ 0.15                        -0.40 (p = 0.343)             -0.11 (p = 0.522)            -0.06 (p = 0.539)       -0.88 (p = 0.390)
+ 0.3                         +0.26 (p = 0.003)             +0.34 (p = 0.007)            -0.19 (p = 0.676)       +0.11 (p = 0.675)
+ 0.5                         -0.28 (p = 0.182)             +0.03 (p = 0.552)            -0.01 (p = 0.877)       +0.02 (p = 0.870)
+ 0.8                         -0.93 (p = 0.362)             -0.01 (p = 0.898)            -1.09 (p = 0.322)       -1.06 (p = 0.371)
+
+
+
+Table 6 gives the numbers behind Figure 4 for λ = 30. Across all 48 (λ, σ, days) combinations in the
+study the twin is significantly better than pooled in 5 and significantly worse in 1, and its mean
+
+                                                 Digital-twin insulin dosing | Page 8
+difference is negative in 35. With 48 tests one expects about 2.4 nominally significant results at the 5%
+level even if nothing were happening, so the 5 positive ones should be treated as exploratory and not as
+evidence of benefit. There is no monotone benefit from more patient data.
+7.4 Which patients benefit, and what happens to safety
+
+
+
+
+Figure 5. At σ = 0.8 and 7 days: per-patient gain over the pooled policy against the patient's log insulin sensitivity. Left:
+shrunk twin (λ = 30). Right: oracle twin (ceiling).
+
+Figure 5 looks at individual patients. In the right-hand panel the ceiling is largest for the least insulin-
+sensitive patients (log sensitivity near -1.05, the clipping bound; 4 of 20 test patients sit at that bound)
+and moderate elsewhere, with 2 of 20 patients for whom the oracle is not the better policy. In the left-
+hand panel the shrunk twin's gain is positive for most of the most insulin-sensitive patients and negative
+for a cluster of near-average patients, so it tends to help or harm in different places from the oracle. The
+Spearman correlation between the ceiling and the absolute log sensitivity (atypicality) is 0.29 (p =
+0.217), which is not distinguishable from zero with 20 patients. We therefore cannot say that atypical
+patients benefit most, which is the intuitive hypothesis behind a digital twin; 3 patients sit at the upper
+bound 2.5, and clipping may blunt the relationship.
+Table 7. Clinical channels per 24-hour day: in-range hours / hypoglycaemic hours (mean over 20 patients). Individual
+and the 7-day twin use 7 days of patient data.
+ σ                      Rule             Pooled           Individual      Twin (λ=30), 7 d   Twin (λ=30), 28   Oracle twin
+                                                                                                    d
+ 0.15                21.3 / 0.000      22.8 / 0.000      21.3 / 0.000       22.9 / 0.054      22.8 / 0.232     23.4 / 0.007
+ 0.3                 21.7 / 0.000      22.9 / 0.029      21.7 / 0.000       23.1 / 0.018      23.2 / 0.088     23.4 / 0.007
+ 0.5                 20.4 / 0.000      22.2 / 0.001      20.4 / 0.000       22.3 / 0.000      22.3 / 0.012     22.9 / 0.000
+ 0.8                 20.2 / 0.000      21.7 / 0.019      20.1 / 0.000       21.7 / 0.012      21.6 / 0.224     22.2 / 0.002
+
+
+
+Table 7 reports what the return hides. In-range time follows the return: the oracle twin has the most at
+every σ, and the rule and individual-only (which reverts to it) the least. Hypoglycaemia is rare
+everywhere, consistent with a heavy reward penalty and a cautious rule, but it is not zero for the
+personalised policies. At σ = 0.3 the twin fitted to 28 days spends 0.088 hours per day below 70 mg/dL
+against 0.029 for the pooled policy and 0.000 for the rule; at σ = 0.8 the figures are 0.224, 0.019 and
+0.000. These are per-day means of small quantities with no CIs stored in the results file, so they are
+reported as observed, not tested. They are several times the pooled value in these cells (and every twin
+fitted to 14 or 28 days has a higher mean than the pooled policy at every σ), and the pattern reappears at
+14 days (σ = 0.3: 0.145 h per day). A twin that doses more aggressively for a patient it believes to be
+insensitive exposes that patient to hypoglycaemia whenever the belief is wrong, so a real system would
+need an explicit hypoglycaemia constraint, not only a reward penalty.
+
+8. Discussion

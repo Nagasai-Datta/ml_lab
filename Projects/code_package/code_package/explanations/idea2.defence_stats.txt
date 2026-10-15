@@ -1,0 +1,6 @@
+== paired tests in idea 2 (difference, 95% CI half-width, p) ==
+/pess_vs_naive/2                                                         -0.982 ± 1.493  p=0.2667  n=5
+/pess_vs_naive/3                                                         -6.977 ± 3.580  p=0.0188  n=5
+/pess_vs_naive/5                                                         -2.539 ± 1.327  p=0.0199  n=5
+/pess_vs_naive/8                                                         -0.333 ± 0.028  p=0.0000  n=5
+saved out/idea02/defence_dashboard.png

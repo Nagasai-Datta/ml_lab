@@ -1,0 +1,9 @@
+== paired tests in idea 5 (difference, 95% CI half-width, p) ==
+/smdp_vs_naive_dp                                                        -0.133 ± 0.139  p=0.1341  n=5
+/smdp_vs_naive_q                                                         -0.048 ± 0.115  p=0.4632  n=5
+/smdp_vs_naive_mc                                                        +0.542 ± 0.249  p=0.0129  n=5
+/gamma_sweep/0.6/diff                                                    -0.095 ± 0.105  p=0.1514  n=5
+/gamma_sweep/0.75/diff                                                   -0.330 ± 0.194  p=0.0291  n=5
+/gamma_sweep/0.9/diff                                                    -0.329 ± 0.136  p=0.0090  n=5
+/gamma_sweep/0.97/diff                                                   +0.014 ± 0.028  p=0.3739  n=5
+saved out/idea05/defence_dashboard.png

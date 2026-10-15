@@ -1,0 +1,580 @@
+7. Results
+7.1 Headline comparison
+Table 3. True-simulator return (28 days, 95% CI over 6 replicates) and number of days with a nudge, by state definition.
+    Method                 Return, memoryless     Return, fatigue-aware        Nudge-days,         Nudge-days, fatigue-
+                                                                               memoryless                aware
+    Guideline rule            10.63 ± 0.00             10.63 ± 0.00                6.1                     6.1
+    Oracle DP (10x data)       9.47 ± 0.00             10.73 ± 0.00               27.1                     7.1
+    DP on estimated MDP        9.74 ± 0.17             10.56 ± 0.08               22.1                    10.0
+    Monte Carlo control        9.91 ± 0.26             10.53 ± 0.07               19.2                    11.1
+    Q-learning                 9.87 ± 0.14             10.51 ± 0.13               19.3                    11.7
+
+
+Table 3 is the headline result. Without the fatigue band, DP scores 9.74 ± 0.17, Q-learning 9.87 and
+Monte Carlo 9.91, all clearly below the expert rule (10.63); the cause is visible in the right-hand columns
+- they nudge on 22, 19 and 19 days of 28, three to four times as often as the rule. Even the oracle DP,
+trained on ten times more data, is worse than the rule (9.47 versus 10.63) and nudges on 27 days: more
+data makes the memoryless policy more confidently wrong, because the problem is a misspecified
+model, not a lack of samples. With the fatigue band, DP (10.56 ± 0.08), Monte Carlo (10.53) and Q-
+learning (10.51) are all within 0.12 of the rule, and the oracle (10.73) is marginally above it.
+
+
+
+
+Figure 1. Memoryless (grey) versus fatigue-aware (blue) state: true return, summed health score and number of nudge-
+days (means with 95% CIs). Augmentation lifts every learner to the rule's level and halves nudging.
+
+Figure 1 shows that the gain does not come from a higher health score alone: summed health is 16.06 for
+fatigue-aware DP and 15.47 for memoryless DP, a difference of 0.59, while nudge-days fall from 22.1 to
+10.0 (a paired difference of 12.2 ± 3.5 days, p = 0.001). Paired differences in return across replicates are
+0.82 ± 0.19 for DP, 0.64 ± 0.18 for Q-learning and 0.61 ± 0.20 for Monte Carlo (p < 0.001 and p = 0.002
+respectively), so the benefit is not specific to the solver.
+
+
+
+
+                                             Fatigue-aware nudging | Page 5
+7.2 What the learned policies do over time
+
+
+
+
+Figure 2. Left: probability of a nudge on each day of the 28-day episode. Right: mean health score. The memoryless DP
+policy keeps nudging at roughly 50-60% per day throughout; the fatigue-aware policy and the rule settle near 20-35%.
+
+Figure 2 shows the mechanism. All policies nudge heavily on day 1 (about 75%), when the person is
+fresh and the response is largest. The rule and the fatigue-aware policy then back off to roughly one
+nudge in four or five days, which lets habituation decay between nudges, and the health score climbs and
+stays higher. The memoryless policy never backs off: it continues to nudge about every other day, keeps
+the person habituated, and its health score drifts down relative to the other two after day 10. The
+memoryless planner cannot see the accumulating habituation, so it has no reason to stop.
+
+
+
+
+Figure 3. Action mix of the fatigue-aware oracle DP policy by habituation band (states observed in the data). The
+probability of 'none' rises with habituation.
+
+Figure 3 reads the learned policy. In fresh states (band h0) the fatigue-aware policy nudges in 78% of
+states; in habituated states (band h3) it nudges in 50% and in the intermediate bands in 62% and 52%.
+The monotone decline is the behaviour that a clinician would endorse ("give the person a break"), and it
+emerged from the reward alone, without being programmed. The decline is gentler than one might expect
+- even in the most habituated band the policy still nudges in about half the supported states - because a
+poor domain in a habituated person can still justify a nudge when the cost is only 0.06.
+7.3 Diagnosing the failure: model-predicted versus true advantage
+Table 4. Does the model rank policies correctly? Differences in return between the oracle DP policy and the expert rule,
+as predicted by the estimated model and as measured in the simulator.
+ Quantity                                             Memoryless                             Fatigue-aware
+ Model-predicted value of oracle DP                     +0.86                                    +0.29
+ minus value of rule (on the oracle MDP)
+ True value of oracle DP minus value of                  -1.17                                   +0.10
+ rule (simulator)
+ Sign agreement                                            no                                     yes
+
+
+                                             Fatigue-aware nudging | Page 6
+Table 4 is the sharpest evidence for the distribution-shift explanation. The memoryless model, even when
+estimated from 3,000 episodes, predicts that its optimal policy beats the rule by +0.86; in the simulator
+the same policy is worse than the rule by 1.17. The model has the wrong sign. The fatigue-aware model
+predicts +0.29 and the simulator delivers +0.10: small, but of the same sign and similar in size. (Absolute
+model values in this time-limited problem are lower than simulator values because the model treats the
+28-day horizon as a constant termination hazard; this affects both policies equally, so the difference is the
+meaningful quantity.) The conclusion is that the memoryless failure is a model failure, and that more
+data from the same logs cannot fix it.
+7.4 Learning curves
+
+
+
+
+Figure 4. Learning curves on the oracle MDP, fatigue-aware state. Q-learning and Monte Carlo both approach the DP
+optimum.
+
+
+
+
+Figure 5. Learning curves on the oracle MDP, memoryless state. Both learners converge quickly - to a policy that the
+simulator shows to be poor.
+
+Figures 4 and 5 show that learning dynamics are not the problem. In both state definitions Q-learning and
+Monte Carlo converge to near the DP optimum of their own model within the step budget, agreeing with
+the DP policy in 92% (fatigue-aware) and 91% (memoryless) of well-visited states for Q-learning. A
+learner can converge perfectly to the optimum of the wrong model. This is the same lesson as Table 3:
+algorithmic convergence diagnostics do not detect a misspecified state.
+
+
+
+
+                                           Fatigue-aware nudging | Page 7
+7.5 Agreement between learners and per-state behaviour
+Table 5. Fraction of well-visited states in which the learner chooses the same action as DP on the estimated model.
+ Learner                                      Agreement with DP, memoryless           Agreement with DP, fatigue-aware
+ Monte Carlo                                              78%                                      88%
+ Q-learning                                               91%                                      92%
+
+
+Table 5 shows that Monte Carlo and Q-learning recover the DP policy in most well-visited states under
+both definitions. High agreement in the memoryless case is a warning rather than a comfort: all three
+solvers are optimising the same flawed model and so they agree on the same flawed policy. Agreement
+among solvers is therefore evidence of convergence, not of correctness.
+
+
+
+
+Figure 6. Policy strips for the fatigue-aware state: expert rule, DP, Monte Carlo and Q-learning actions by state.
+
+
+
+
+Figure 7. Policy strips for the memoryless state. The learned policies nudge in nearly every state.
+
+Figures 6 and 7 display the policies state by state. In the memoryless strips almost every state receives a
+nudge, which is the visual signature of the over-nudging in Table 3; in the fatigue-aware strips the cells
+with a high habituation band are more often blank, reflecting the break-giving behaviour of Figure 3.
+
+
+                                              Fatigue-aware nudging | Page 8
+8. Discussion
+Why no learned policy beats the rule. The behaviour policy nudges only when a domain is poor, which
+is close to what the simulator's reward favours; the rule also uses a single threshold that happens to align
+with the cost of a nudge. Under such conditions the Bellman-optimal policy is not very different from the
+rule, and estimation noise in 8,400 transitions is enough to offset any small advantage. The honest
+summary is that the fatigue band restores parity with a strong expert rule. In practice an app's rule will be
+less well matched, so the room for improvement could be larger - but the simulator cannot show that.
+Design guidance. (1) Any intervention whose effect decays with exposure needs an exposure summary
+in the state. It is cheap to compute from the notification log. (2) Check model-predicted against measured
+advantage whenever a simulator or randomised holdout exists; a sign disagreement is a red flag that no
+amount of data will fix. (3) Prefer an exposure summary with few levels: four bands were enough here,
+and each added band multiplies the data requirement.
+Algorithm choice. DP, Q-learning and Monte Carlo all benefit equally from the augmentation, so the
+state definition matters more than the solver. With the correct state, Monte Carlo is competitive on this
+short, 28-step horizon, unlike in longer-horizon problems where its variance dominates.
+
+9. Limitations and threats to validity
+   Habituation form. The simulator's habituation is a single exponential memory. Real habituation is
+    person-specific and may recover or sensitise; a sufficient summary could need more than one
+    number.
+   Observable exposure. We assume the habituation band is computed from the log exactly. In
+    practice it is a noisy proxy for the person's true state of attention.
+   One nudge per day, no content. Real systems vary message content, timing and channel; our action
+    set is a coarse abstraction.
+   No engagement dynamics. People can disable notifications after too many nudges. Such drop-out
+    would make over-nudging even worse than the simulator shows.
+   Simulated, not clinical, evidence. All numbers come from stylised simulators written for this study.
+    They demonstrate how the algorithms behave when the ground truth is known; they say nothing
+    about the safety or benefit of any treatment in people.
+   State aggregation. Continuous physiology is discretised into bands. Banding makes the process only
+    approximately Markov, and part of the gap between the DP policy on the estimated model and the
+    true optimum is a modelling gap rather than a sampling gap.
+   Fixed-horizon episodes treated as stationary. Episodes end after a fixed number of steps but the
+    state does not always contain the clock, so the estimated model treats termination as a constant
+    hazard. This distorts absolute model values (not true-simulator scores) and is why model-based value
+    estimates are compared only on a common oracle model.
+   Behaviour policy. The logged data come from a single ε-noisy rule. Coverage of non-rule actions is
+    therefore thin, which is exactly the offline-RL situation, and results depend on that coverage.
+   Hand-set hyper-parameters. ε schedules, step sizes and the support threshold were fixed in
+    advance and not tuned per paper.
+
+10. Ethical considerations and future work
+Ethics. No human data were used, so no consent or privacy issues arise in this study. If the method were
+applied to real records, three safeguards would be essential: de-identification and governance approval of
+the source data; a clinician-in-the-loop design in which the learned policy is advisory, with hard
+guardrails on unsafe actions; and prospective, randomised or at least carefully monitored evaluation
+before any deployment. Reinforcement learning from logs inherits the biases of the clinicians who
+produced them, and may under-serve groups that are under-represented in the data; subgroup
+performance should be reported alongside averages.
+
+                                        Fatigue-aware nudging | Page 9
+Future work. (1) Replace the exponential habituation by person-specific, possibly non-monotone
+responsiveness and test whether a learned summary of exposure can replace the hand-built band; (2)
+combine the fatigue band with the support-threshold and robust methods used for other conditions; (3)
+run the adapter on a real wearable log and compare the model-predicted advantage of the fatigue-aware
+policy to an A/B holdout, the only true test of the diagnostic proposed here.
+
+11. Conclusion
+A learner that treats each day as a fresh Markov state cannot see habituation. On a wearable-style
+simulator, DP, Monte Carlo control and Q-learning without a fatigue band all over-nudge (22, 19 and 19
+of 28 days) and underperform an expert rule; with a four-level habituation band they nudge about 10-12
+days and match it. The model-predicted-versus-true advantage diagnostic shows that the memoryless
+failure is a policy-induced distribution shift, so it persists with more data. The practical message is
+simple: give the state a memory of recent exposure. The scientific caveat is equally simple: this is a
+simulator study, and no learned policy outperformed the expert rule.
+
+Appendix A. Anticipated reviewer questions
+The following questions are the ones a reviewer or examiner is most likely to raise. Each answer is tied
+to a number or figure produced by the code.
+Q1. Why should I believe a simulator result about habituation?
+   You should not believe it as a statement about people. It demonstrates a mechanism - a model that
+   ignores exposure history is misled when logs come from a cautious policy - and measures how large
+   the consequence can be when ground truth is known. The adapter provided lets the same analysis be
+   run on real logs, where only model-based estimates are possible.
+Q2. Is the fatigue band just an extra feature that adds information?
+   Yes, and that is the point: it is the minimal piece of history that makes the dynamics approximately
+   Markov. Table 4 shows its effect on policy ranking, not merely on fit.
+Q3. Why did even the oracle memoryless DP lose to the rule?
+   Because the model is wrong in a systematic way. The memoryless oracle predicts a +0.86 advantage
+   over the rule and delivers -1.17. The error is not statistical noise: it is the habituation distribution that
+   differs between behaviour and learned policy.
+Q4. Are the four habituation bands optimal?
+   They were chosen in advance and not tuned. A finer partition would reduce approximation error and
+   increase data requirements; testing 3, 4 and 6 bands is the obvious sensitivity analysis, and the code
+   accepts any bin edges.
+Q5. Why does the rule beat the learned policies, and is that a problem for your claim?
+   It limits the claim. We claim only that augmentation prevents a failure and restores parity with the
+   rule; we do not claim superiority. The rule matches the simulator's cost structure well, which is a
+   favourable case for the baseline.
+
+Appendix B. Reproducibility
+All results in this paper are produced by `python ideas.py 10` (shared library: rl_core.py, domains.py,
+common.py). Random seeds are fixed in the code, so a re-run reproduces every table and figure. Figure
+files generated by the script: fig_memory_compare, fig_trajectories, fig_habituation_policy,
+fig_learning_memory, fig_learning_memoryless. To repeat the study on a real Kaggle table, convert it
+with kaggle_adapter.transitions_from_dataframe, then call build_mdp, value_iteration, mc_control and
+
+
+
+                                        Fatigue-aware nudging | Page 10
+q_learning exactly as the script does; because a real table has no simulator, report model-based estimates
+on a held-out split and label them as estimates.
+
+Appendix C. Source code of the experiment
+For completeness the exact source of the simulator and the experiment function is reproduced below; it is
+the same code that produced every number and figure in this paper (the shared solvers value_iteration,
+mc_control and q_learning are in rl_core.py and are delivered with the code package).
+Nudge
+    class Nudge(Domain):
+        name = "nudge"
+        nA, gamma, max_steps = 4, 0.97, 28
+        info_keys = ["health", "nudges"]
+        action_labels = ["none", "sleep", "activity", "stress"]
+        behavior_eps = 0.3
+
+         def __init__(self, memory=True):
+             self.memory = memory
+             self.nS = 27 * (4 if memory else 1)
+
+        def _s(self):
+            b = (band(self.sl, [0.4, 0.65]) * 3 + band(self.ac, [0.4, 0.65])) * 3 +
+    band(self.st, [0.4, 0.65])
+            if not self.memory:
+                return b
+            return b * 4 + band(self.h, [0.5, 1.2, 2.0])
+
+         def reset(self, rng):
+             self.sl, self.ac, self.st = (float(np.clip(rng.normal(0.5, 0.15), 0, 1)),
+                                          float(np.clip(rng.normal(0.4, 0.15), 0, 1)),
+                                          float(np.clip(rng.normal(0.55, 0.15), 0, 1)))
+             self.h, self.t = 0.0, 0
+             return self._s()
+
+        def step(self, a, rng):
+            m = float(np.exp(-0.9 * self.h))
+            n = lambda: rng.normal(0, 0.08)
+            sl = self.sl + 0.25 * (0.55 - self.sl) + 0.5 * m * (a == 1) * (1 - self.sl) +
+    0.05 * (self.ac - 0.4) + n()
+            ac = self.ac + 0.25 * (0.40 - self.ac) + 0.55 * m * (a == 2) * (1 - self.ac) +
+    n()
+            st = self.st + 0.20 * (0.50 - self.st) - 0.5 * m * (a == 3) * self.st + 0.15 *
+    (0.5 - self.sl) + n()
+            self.sl, self.ac, self.st = (float(np.clip(x, 0, 1)) for x in (sl, ac, st))
+            self.h = 0.7 * self.h + float(a > 0)
+            self.t += 1
+            health = (self.sl + self.ac + (1 - self.st)) / 3.0
+            r = health - 0.06 * (a > 0)
+            return self._s(), r, self.t >= self.max_steps, dict(health=health,
+    nudges=float(a > 0)), 1
+
+         def rule(self, s):
+             b = s // 4 if self.memory else s
+             sl, ac, st = b // 9, (b // 3) % 3, b % 3
+             # nudge the worst domain if it is in the lowest band
+             worst = min((sl, 1), (ac, 2), (2 - st, 3))
+             return worst[1] if worst[0] == 0 else 0
+
+
+ideas.idea10
+    def idea10():
+        I = 10; d = odir(I)
+        dm, d0 = Nudge(True), Nudge(False)
+        rm = standard_benchmark(dm, n_eps=300, n_oracle=3000, steps=150000, seeds=6)
+        r0 = standard_benchmark(d0, n_eps=300, n_oracle=3000, steps=150000, seeds=6)
+        standard_figs(rm, dm, I, tag="_memory", title="Fatigue-aware (memory) state")
+        standard_figs(r0, d0, I, tag="_memoryless", title="Memoryless state")
+        meth = ["Rule", "DP", "Monte Carlo", "Q-learning"]
+        fig, axs = plt.subplots(1, 3, figsize=(9.0, 3.0))
+
+
+                                       Fatigue-aware nudging | Page 11
+        for ax, (key, yl) in zip(axs, (("J", "True return"), ("health", "Health score
+    summed over 28 days"), ("nudges", "Nudge-days / 28 days"))):
+            for i, (rr, lab, c) in enumerate(((r0, "memoryless state", "#999999"), (rm,
+    "fatigue-aware state", "#0072B2"))):
+                vals = [np.mean(rr["methods"][m]["J"] if key == "J" else rr["methods"][m]
+    ["info"][key]) for m in meth]
+                errs = [ci95(rr["methods"][m]["J"] if key == "J" else rr["methods"][m]
+    ["info"][key]) for m in meth]
+                ax.errorbar(np.arange(len(meth)) + (i - 0.5) * 0.18, vals, yerr=errs,
+    fmt="o", color=c, capsize=3, ms=6, label=lab)
+            ax.set_xticks(range(len(meth))); ax.set_xticklabels([m.replace(" ", "\n") for m
+    in meth], fontsize=7); ax.set_ylabel(yl)
+            ax.set_xlim(-0.5, len(meth) - 0.5)
+        axs[0].legend(fontsize=7, loc="lower left");
+    fig.savefig(f"{d}/fig_memory_compare.png"); plt.close(fig)
+        fig, axs = plt.subplots(1, 2, figsize=(7.6, 3.0))
+        for key, ax, yl in (("nudges", axs[0], "Nudge probability on day t"), ("health",
+    axs[1], "Mean health score on day t")):
+            for dom_, rr, lab, c, ls_ in ((d0, r0, "DP memoryless", "#999999", "-"), (dm,
+    rm, "DP fatigue-aware", "#0072B2", "-")):
+                ax.plot(range(1, 29), traj_means(dom_, rr["policies"]["DP"], key), color=c,
+    ls=ls_, label=lab)
+            ax.plot(range(1, 29), traj_means(dm, [dm.rule(s) for s in range(dm.nS)], key),
+    color="#555555", ls=":", label="Rule")
+            ax.set_xlabel("Day"); ax.set_ylabel(yl)
+        axs[0].legend(fontsize=7); fig.savefig(f"{d}/fig_trajectories.png"); plt.close(fig)
+        pol = np.array(rm["policies"]["Oracle DP"]); vis = rm["m_or"].visits > 0
+        hb = np.arange(dm.nS) % 4
+        rate = [float((pol[(hb == h) & vis] > 0).mean()) if ((hb == h) & vis).any() else
+    np.nan for h in range(4)]
+        mix = np.zeros((4, 4))
+        for h in range(4):
+            sel = (hb == h) & vis
+            for a in range(4): mix[h, a] = float((pol[sel] == a).mean()) if sel.any() else
+    np.nan
+        fig, ax = plt.subplots(figsize=(4.4, 3.0))
+        im = ax.imshow(mix, cmap="Blues", vmin=0, vmax=1); ax.grid(False)
+        ax.set_xticks(range(4)); ax.set_xticklabels(dm.action_labels);
+    ax.set_yticks(range(4)); ax.set_yticklabels(["h0 (fresh)", "h1", "h2", "h3
+    (habituated)"])
+        for i in range(4):
+            for j in range(4): ax.text(j, i, f"{mix[i, j]:.2f}", ha="center", va="center",
+    fontsize=8)
+        ax.set_ylabel("Habituation band"); fig.colorbar(im, fraction=0.046)
+        fig.savefig(f"{d}/fig_habituation_policy.png"); plt.close(fig)
+        out = dict(memory=summarize(rm), memoryless=summarize(r0),
+    nudge_rate_by_habituation=rate, action_mix_by_habituation=mix,
+                    mem_vs_less_dp=paired(rm["methods"]["DP"]["J"], r0["methods"]["DP"]
+    ["J"]),
+                    mem_vs_less_q=paired(rm["methods"]["Q-learning"]["J"], r0["methods"]["Q-
+    learning"]["J"]),
+                    mem_vs_less_mc=paired(rm["methods"]["Monte Carlo"]["J"], r0["methods"]
+    ["Monte Carlo"]["J"]),
+                    nudges_dp=paired(r0["methods"]["DP"]["info"]["nudges"], rm["methods"]
+    ["DP"]["info"]["nudges"]),
+                    states=dict(memory=dm.nS, memoryless=d0.nS))
+        save_json(I, "results", dict(out, mem_full=drop_models(rm),
+    less_full=drop_models(r0)))
+        return out
+
+
+rl_core: shared solvers
+    def build_mdp(data, dom, weights=None, chan=None, min_n=10, term_prior=1.0):
+        """Empirical (maximum-likelihood) MDP from logged transitions.
+        (s,a) pairs observed fewer than min_n times are completed pessimistically: they go
+        to the absorbing terminal state with the worst reward seen in the data."""
+        nS, nA = dom.nS, dom.nA
+        T = nS
+        w = np.ones(len(data["s"])) if weights is None else np.asarray(weights, float)
+        s, a = data["s"], data["a"]
+        s2 = np.where(data["done"] > 0, T, data["s2"])
+        N = np.zeros((nS + 1, nA, nS + 1))
+        np.add.at(N, (s, a, s2), w)
+
+
+                                  Fatigue-aware nudging | Page 12
+    n = N.sum(2)
+    Rsum = np.zeros((nS + 1, nA))
+    np.add.at(Rsum, (s, a), w * data["r"])
+    Gsum = np.zeros((nS + 1, nA, nS + 1))
+    np.add.at(Gsum, (s, a, s2), w * dom.gamma ** data["dur"])
+    m = MDP()
+    m.nS, m.nA, m.gamma = nS, nA, dom.gamma
+    m.n = n
+    m.N = N
+    seen = n >= min_n          # support constraint: thinly observed (s,a) are
+completed pessimistically
+    n_eff = n + term_prior        # one pseudo-observation of absorption guards against
+'immortal' loops
+    P = np.zeros_like(N)
+    P[seen] = N[seen] / n_eff[seen][:, None]
+    P[seen, T] += term_prior / n_eff[seen]
+    G = np.full_like(N, dom.gamma)
+    nz = N > 0
+    G[nz] = Gsum[nz] / N[nz]
+    R = np.zeros((nS + 1, nA))
+    R[seen] = Rsum[seen] / n_eff[seen]
+    rmin = float(data["r"].min())
+    m.rmin, m.rmax = rmin, float(data["r"].max())
+    P[~seen, T] = 1.0
+    R[~seen] = rmin
+    P[T, :, :] = 0.0
+    P[T, :, T] = 1.0
+    R[T, :] = 0.0
+    m.P, m.G, m.R = P, G, R
+    m.PG = P * G
+    # reward channels
+    m.Rc = {}
+    for c in (chan if chan is not None else dom.chan):
+        cs = np.zeros((nS + 1, nA))
+        np.add.at(cs, (s, a), w * data[c])
+        cr = np.zeros((nS + 1, nA))
+        cr[seen] = cs[seen] / n_eff[seen]
+        m.Rc[c] = cr
+    # start distribution = first state of every episode
+    first = data["t"] == 0
+    mu = np.bincount(data["s"][first], minlength=nS + 1).astype(float)
+    m.mu = mu / mu.sum()
+    m.visits = (n * seen).sum(1)[:nS]
+    m.seen = seen
+    m.Rsum = Rsum
+    return m
+
+
+def value_iteration(m, R=None, mask=None, tol=1e-9, max_iter=20000, penalty=None):
+    R = m.R if R is None else R
+    if penalty is not None:
+        R = R - penalty
+    V = np.zeros(m.nS + 1)
+    for _ in range(max_iter):
+        Q = _q(m, V, R)
+        if mask is not None:
+            Q = np.where(mask, Q, -1e18)
+        Vn = Q.max(1)
+        Vn[m.nS] = 0.0
+        if np.abs(Vn - V).max() < tol:
+            V = Vn
+            break
+        V = Vn
+    Q = _q(m, V, R)
+    if mask is not None:
+        Q = np.where(mask, Q, -1e18)
+    pi = Q.argmax(1)[:m.nS]
+    return pi, V, Q
+
+
+def q_learning(m, rng, steps, eps_fn=eps_exp, alpha0=1.0, alpha_min=0.02,
+               q0=0.0, mask=None, n_ckpt=25, max_len=200, ckpt_fn=None):
+    nS, nA = m.nS, m.nA
+    ckpt_fn = ckpt_fn or (lambda p: J(m, p))
+
+
+
+                              Fatigue-aware nudging | Page 13
+   Q = np.full((nS + 1, nA), q0)
+   Q[nS] = 0.0
+   cnt = np.zeros((nS + 1, nA))
+   smp = Sampler(m, rng)
+   ck = np.unique(np.linspace(0, steps, n_ckpt + 1).astype(int))
+   curve = []
+   s, ep_t = smp.start(), 0
+   ci = 0
+   for k in range(steps + 1):
+       if ci < len(ck) and k == ck[ci]:
+           pi = np.array([_greedy(Q, x, mask) for x in range(nS)])
+           curve.append((k, ckpt_fn(pi)))
+           ci += 1
+       if k == steps:
+           break
+       if rng.random() < eps_fn(k, steps):
+           a = _explore(rng, s, nA, mask)
+       else:
+           a = _greedy(Q, s, mask)
+       s2, r, g = smp.step(s, a)
+       tgt = r + (0.0 if s2 == nS else g * Q[s2].max() if mask is None
+                   else g * np.where(mask[s2], Q[s2], -1e18).max())
+       cnt[s, a] += 1
+       al = max(alpha_min, alpha0 / (1.0 + cnt[s, a] ** 0.7))
+       Q[s, a] += al * (tgt - Q[s, a])
+       ep_t += 1
+       if s2 == nS or ep_t >= max_len:
+           s, ep_t = smp.start(), 0
+       else:
+           s = s2
+   pi = np.array([_greedy(Q, x, mask) for x in range(nS)])
+   return pi, Q, np.array(curve)
+
+
+def mc_control(m, rng, steps, eps_fn=eps_exp, q0=0.0, mask=None, n_ckpt=25,
+                max_len=200, ckpt_fn=None):
+    """first-visit Monte Carlo control with epsilon-soft behaviour policy and
+    incremental-average updates."""
+    nS, nA = m.nS, m.nA
+    ckpt_fn = ckpt_fn or (lambda p: J(m, p))
+    Q = np.full((nS + 1, nA), q0)
+    Q[nS] = 0.0
+    N = np.zeros((nS + 1, nA))
+    smp = Sampler(m, rng)
+    ck = np.unique(np.linspace(0, steps, n_ckpt + 1).astype(int))
+    curve = []
+    used, ci = 0, 0
+    while True:
+        while ci < len(ck) and used >= ck[ci]:
+            pi = np.array([_greedy(Q, x, mask) for x in range(nS)])
+            curve.append((ck[ci], ckpt_fn(pi)))
+            ci += 1
+        if used >= steps:
+            break
+        s = smp.start()
+        traj = []
+        for _ in range(max_len):
+            if rng.random() < eps_fn(used + len(traj), steps):
+                 a = _explore(rng, s, nA, mask)
+            else:
+                 a = _greedy(Q, s, mask)
+            s2, r, g = smp.step(s, a)
+            traj.append((s, a, r, g))
+            s = s2
+            if s2 == nS:
+                 break
+        used += len(traj)
+        # returns, backwards; first-visit
+        Gret = 0.0
+        rets = []
+        for (s_, a_, r_, g_) in reversed(traj):
+            Gret = r_ + g_ * Gret
+            rets.append(Gret)
+        rets.reverse()
+
+
+                             Fatigue-aware nudging | Page 14
+              seen = set()
+              for (s_, a_, _, _), G_ in zip(traj, rets):
+                  if (s_, a_) in seen:
+                      continue
+                  seen.add((s_, a_))
+                  N[s_, a_] += 1
+                  Q[s_, a_] += (G_ - Q[s_, a_]) / N[s_, a_]
+          pi = np.array([_greedy(Q, x, mask) for x in range(nS)])
+          return pi, Q, np.array(curve)
+
+
+
+References
+[1] Nahum-Shani, I. et al. Just-in-time adaptive interventions (JITAIs) in mobile health: key components and design
+     principles for ongoing health behavior support. Annals of Behavioral Medicine 52(6):446-462, 2018.
+[2] Yom-Tov, E. et al. Encouraging physical activity in patients with diabetes: intervention using a reinforcement learning
+     system. Journal of Medical Internet Research 19(10):e338, 2017.
+[3] Murphy, S. A. Optimal dynamic treatment regimes. Journal of the Royal Statistical Society: Series B 65(2):331-366,
+     2003.
+[4] Murphy, S. A. A generalization error for Q-learning. Journal of Machine Learning Research 6:1073-1097, 2005.
+[5] Levine, S., Kumar, A., Tucker, G. and Fu, J. Offline reinforcement learning: tutorial, review, and perspectives on open
+     problems. arXiv:2005.01643, 2020.
+[6] Yu, C., Liu, J., Nemati, S. and Yin, G. Reinforcement learning in healthcare: a survey. ACM Computing Surveys
+     55(1):1-36, 2021.
+[7] Gottesman, O. et al. Guidelines for reinforcement learning in healthcare. Nature Medicine 25:16-18, 2019.
+[8] Fujimoto, S., Meger, D. and Precup, D. Off-policy deep reinforcement learning without exploration. Proceedings of
+     the 36th ICML, 2019.
+[9] Sutton, R. S. and Barto, A. G. Reinforcement Learning: An Introduction, 2nd ed. MIT Press, 2018.
+[10] Bellman, R. Dynamic Programming. Princeton University Press, 1957.
+[11] Puterman, M. L. Markov Decision Processes: Discrete Stochastic Dynamic Programming. Wiley, 1994.
+[12] Singh, S. P. and Sutton, R. S. Reinforcement learning with replacing eligibility traces. Machine Learning 22:123-
+     158, 1996.
+[13] Watkins, C. J. C. H. and Dayan, P. Q-learning. Machine Learning 8(3-4):279-292, 1992.
+[14] Jin, Y., Yang, Z. and Wang, Z. Is pessimism provably efficient for offline RL? Proceedings of the 38th International
+     Conference on Machine Learning (ICML), 2021.
+[15] Kumar, A., Zhou, A., Tucker, G. and Levine, S. Conservative Q-learning for offline reinforcement learning.
+     Advances in Neural Information Processing Systems 33, 2020.
+
+
+
+
+                                             Fatigue-aware nudging | Page 15
+
