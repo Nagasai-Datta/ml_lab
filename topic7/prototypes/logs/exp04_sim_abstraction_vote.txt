@@ -1,0 +1,5 @@
+full model (paper DP)                J= 162.19 ± 3.34   vs paper DP  +0.00 (p=1.0000)
+vote, all 7 abstractions             J= 174.57 ± 3.70   vs paper DP +12.38 (p=0.0081)
+vote, 3 two-feature abstractions     J= 171.69 ± 3.77   vs paper DP  +9.50 (p=0.0294)
+Q-average, all 7                     J= 162.48 ± 1.53   vs paper DP  +0.29 (p=0.8559)
+Q-average, two-feature               J= 168.96 ± 1.64   vs paper DP  +6.77 (p=0.0321)

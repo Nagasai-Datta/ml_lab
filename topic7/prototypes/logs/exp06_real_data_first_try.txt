@@ -1,0 +1,27 @@
+classifier: train 45870 rows, test 64617 rows, test AUC 0.737, mean p 0.224 vs actual 0.198
+real sessions with >=14 appointments per weekday: {0: 190, 1: 243, 2: 243, 3: 126, 4: 121}
+risk band edges [0.175 0.218 0.264]  observed-rate band edges [0.1 0.2 0.3]
+baselines done 10s
+seed 0 14s
+seed 1 19s
+seed 2 23s
+seed 3 29s
+seed 4 35s
+
+policy                                                 return     ci  ours minus this
+Myopic marginal analysis (Topuz-style)                 180.78   0.00   -19.17 (p=0.003)
+Fixed +2                                               176.72   0.00   -15.11 (p=0.006)
+Oracle DP, predicted-risk state (10x data)             174.99   0.00   -13.39 (p=0.010)
+Fixed +3                                               174.20   0.00   -12.60 (p=0.012)
+Threshold double-booking p>=0.3 (Amalina-style)        168.96   0.00    -7.36 (p=0.064)
+OURS: predicted-risk state + abstraction vote          161.60   5.66    +0.00 (p=nan)
+Threshold double-booking p>=0.2 (Amalina-style)        160.47   0.00    +1.13 (p=0.715)
+Paper 7 Q-learning (history state)                     159.74   0.78    +1.86 (p=0.503)
+Paper 7 DP (history state)                             159.28   0.45    +2.32 (p=0.454)
+DP on predicted-risk state                             155.22   0.92    +6.38 (p=0.094)
+Rule (paper 7)                                         154.45   0.00    +7.15 (p=0.069)
+Fixed +4                                               154.01   0.00    +7.59 (p=0.058)
+Threshold double-booking p>=0.4 (Amalina-style)        129.31   0.00   +32.30 (p=0.000)
+Fixed +1                                               114.38   0.00   +47.23 (p=0.000)
+Threshold double-booking p>=0.5 (Amalina-style)         91.52   0.00   +70.09 (p=0.000)
+Fixed +0                                                65.39   0.00   +96.21 (p=0.000)

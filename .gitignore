@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.ipynb_checkpoints/
+~$*
+
+# raw dataset: kept in the zip, not republished in git (see topic7/data/README.md)
+topic7/data/*.csv

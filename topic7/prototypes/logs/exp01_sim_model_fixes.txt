@@ -1,0 +1,18 @@
+seed 0 6s
+seed 1 9s
+seed 2 12s
+seed 3 16s
+seed 4 19s
+
+method                                       mean     ci    vs DP(paper)
+Rule                                       160.27   0.00     -1.92 ± 3.34
+Oracle DP (1500 eps)                       179.01   0.00    +16.82 ± 3.34
+DP min_n=10                                162.19   3.34     +0.00 ± 0.00
+DP min_n=5                                 168.48   3.17     +6.29 ± 3.14
+DP min_n=3                                 167.29   2.53     +5.10 ± 3.59
+DP min_n=1                                 167.33   2.51     +5.14 ± 3.56
+DP on weekday-free abstraction             177.36   2.24    +15.17 ± 3.80
+DP smoothed->no-weekday lam=5              168.87   2.90     +6.68 ± 2.96
+DP smoothed->no-weekday lam=20             171.55   1.13     +9.35 ± 3.52
+DP smoothed->no-weekday lam=50             172.66   1.89    +10.47 ± 3.74
+Bootstrap-ensemble DP (K=25)               160.12   0.33     -2.07 ± 3.08
