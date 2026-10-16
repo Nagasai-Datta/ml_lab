@@ -20,4 +20,4 @@ Download it from https://www.kaggle.com/datasets/joniarroba/noshowappointments (
 shasum -a 256 topic7/data/KaggleV2-May-2016.csv
 ```
 
-Our copy prints `9132d3e7d0246617df9041d3764f20ad6f08e7b0d9f0997fa254fc5e52eda27d`. It came from a public GitHub mirror of the Kaggle file (`mriffaud/Medical-Appointment-No-Shows`); its rows and columns match the Kaggle description. If a fresh Kaggle download gives a different hash, rerun the prototypes and compare.
+Our copy prints `9132d3e7d0246617df9041d3764f20ad6f08e7b0d9f0997fa254fc5e52eda27d`. It came from a public GitHub mirror of the Kaggle file (`mriffaud/Medical-Appointment-No-Shows`); its rows and columns match the Kaggle description. If a fresh Kaggle download gives a different hash, rerun `run_topic7.py` and compare with the committed `out/topic7/results.json`.

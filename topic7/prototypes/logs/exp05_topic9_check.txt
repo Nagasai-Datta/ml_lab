@@ -1,2 +1,0 @@
-H=12 {'Rule': '5.42±0.00', 'Oracle DP': '12.62±0.00', 'DP (paper)': '9.89±0.63', 'DP + drop week index': '11.57±0.35'}
-H=24 {'Rule': '7.90±0.00', 'Oracle DP': '19.72±0.00', 'DP (paper)': '12.40±0.54', 'DP + drop week index': '15.69±1.50'}

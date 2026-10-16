@@ -1,7 +1,0 @@
-keep weekday+no-show+waiting      states= 100  J= 162.19 ± 3.34
-keep weekday+no-show              states=  20  J= 164.74 ± 4.31
-keep weekday+waiting              states=  25  J= 176.11 ± 1.59
-keep no-show+waiting              states=  20  J= 177.36 ± 2.24
-keep weekday                      states=   5  J= 175.30 ± 2.01
-keep no-show                      states=   4  J= 165.01 ± 14.27
-keep waiting                      states=   5  J= 178.72 ± 2.16
