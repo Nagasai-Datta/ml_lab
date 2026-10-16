@@ -1,16 +1,16 @@
 """planner.py -- our method: learn only how patients behave, plan everything else with DP.
 
-Sir's learners estimate every transition probability of every (state, action) pair from the logs. With 150
+The learners of Paper 7 estimate every transition probability of every (state, action) pair from the logs. With 150
 logged days most pairs are seen fewer than 10 times, so the support rule sends them back to the overbooking
 rule. Our planner splits the problem in two:
   * learned from data : how patients behave (show-up chance, how the no-show level moves, waiting-list arrivals)
   * known             : the clinic's own rules (10 slots, overtime and idle costs, the waiting list is drained
                         by extra bookings, the reward formula)
-The two are combined into an MDP that is solved with sir's value_iteration (rl_core). Every logged session
+The two are combined into an MDP that is solved with value_iteration (rl_core). Every logged session
 informs the same few patient numbers, so they are estimated precisely from little data, and every action's
 value can be computed even if the logs never tried it.
 
-  clinic_model(data, dom)          comparison A: model for sir's simulator (domains.Clinic), from logs only
+  clinic_model(data, dom)          comparison A: model for the Clinic simulator (domains.Clinic), from logs only
   real_model(data, dom, p_extra)   comparison B: model for the real-data clinic; show-up chances come from
                                    the no-show classifier (noshow_data.py)
   lookahead(dom, V, ...)           comparison B: at decision time use each booked patient's own predicted
@@ -88,7 +88,7 @@ def _start_dist(data, nS):
 
 # ----------------------------------------------------------------------------- comparison A
 def clinic_model(data, dom, wait_cost=0.4):
-    """structured model of sir's Clinic (state = weekday x no-show band x waiting band), from the logs only"""
+    """structured model of the Clinic simulator (state = weekday x no-show band x waiting band), from the logs only"""
     nS, nA = dom.nS, dom.nA
     d_, rest = np.divmod(data["s"], 20)
     pb_ = rest // 5

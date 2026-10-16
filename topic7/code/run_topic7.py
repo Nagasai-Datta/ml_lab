@@ -2,6 +2,7 @@
 
     python topic7/code/run_topic7.py            full run (writes topic7/code/out/topic7/)
     python topic7/code/run_topic7.py --quick    smoke test, a few seeds (writes topic7/code/out/topic7_quick/)
+    python topic7/code/run_topic7.py --figures  redraw the figures from the saved results.json (no experiments)
 
 Comparison A  sir's own simulator (domains.Clinic), his data seeds (1000+), his scoring (eval_policy, 300 episodes)
     A1  sir's rule, DP, Monte Carlo, Q-learning, oracle  vs  ours (structured model + DP), and Monte Carlo /
@@ -31,6 +32,7 @@ from real_clinic import RealClinic, risk_edges
 import planner as pl
 
 QUICK = "--quick" in sys.argv
+FIG_ONLY = "--figures" in sys.argv
 CFG = dict(seeds=3 if QUICK else 20, n_logged=150, n_oracle=1500, steps=30000 if QUICK else 150000,
            n_eval_A=300, n_eval_B=200 if QUICK else 1000, ckpt_eps=30 if QUICK else 60,
            sizes=[50, 150] if QUICK else [25, 50, 150, 500, 1500], size_seeds=2 if QUICK else 10,
@@ -263,15 +265,30 @@ def comparison_B():
 
 
 # ============================================================================= figures
-def dot_plot(summary, order, colors, path, title):
+# figure labels use the method names of the paper (results.json keeps the short keys)
+NAME = {"Rule": "Guideline rule", "Sir: DP": "DP on estimated MDP", "Sir: Monte Carlo": "Monte Carlo control",
+        "Sir: Q-learning": "Q-learning", "Oracle DP (10x data)": "Oracle DP (10x data)",
+        "Ours: DP": "Structured model DP (ours)", "Ours: Monte Carlo": "Monte Carlo control, structured model",
+        "Ours: Q-learning": "Q-learning, structured model", "One-session optimiser": "Single session optimiser",
+        "Best fixed overbooking": "Best fixed overbooking"}
+
+
+def label(nm):
+    if nm.startswith("Threshold"):
+        return "Threshold double booking (θ = " + nm.split(">= ")[1]
+    if nm.startswith("Fixed"):
+        return "Fixed booking (k = " + nm.split("+")[1]
+    return NAME.get(nm, nm)
+
+
+def dot_plot(summary, order, colors, path):
     fig, ax = plt.subplots(figsize=(6.4, 0.42 * len(order) + 1.0))
     for i, nm in enumerate(order):
         s = summary[nm]["J"]
         ax.errorbar(s["mean"], i, xerr=s["ci"], fmt="D" if nm.startswith("Ours") else "o", color=colors[nm],
                     capsize=3, ms=7, lw=1.6)
-    ax.set_yticks(range(len(order))); ax.set_yticklabels(order); ax.invert_yaxis()
-    ax.set_xlabel("Discounted return (higher is better; 95% CI over seeds)")
-    ax.set_title(title)
+    ax.set_yticks(range(len(order))); ax.set_yticklabels([label(nm) for nm in order]); ax.invert_yaxis()
+    ax.set_xlabel("Discounted return (higher is better; 95% CI over replicates)")
     fig.savefig(path); plt.close(fig)
 
 
@@ -286,51 +303,53 @@ def colors_for(names):
     return c
 
 
-def curve_plot(curves, ref, path, title):
+def curve_plot(curves, ref, path):
     fig, ax = plt.subplots(figsize=(6.4, 3.6))
     for key, ls in (("Monte Carlo|sir", "-"), ("Q-learning|sir", "-"), ("Monte Carlo|ours", "--"), ("Q-learning|ours", "--")):
         alg, who = key.split("|")
         arr = np.array(curves[key]); x = arr[0, :, 0]; mu = arr[:, :, 1].mean(0)
         sd = arr[:, :, 1].std(0, ddof=1) if len(arr) > 1 else 0 * mu
-        ax.plot(x, mu, ls=ls, color=COL[alg], lw=1.8, label=f"{alg}, {'our model' if who == 'ours' else 'sir’s model'}")
+        ax.plot(x, mu, ls=ls, color=COL[alg], lw=1.8, label=f"{alg}, {'structured model' if who == 'ours' else 'estimated MDP'}")
         ax.fill_between(x, mu - sd, mu + sd, color=COL[alg], alpha=0.12)
     for nm, (v, ls) in ref.items():
-        ax.axhline(v, color=OURS if nm.startswith("Ours") else COL["Rule"], ls=ls, lw=1.1, label=nm)
+        ax.axhline(v, color=OURS if nm.startswith("Ours") else COL["Rule"], ls=ls, lw=1.1, label=label(nm))
+    lo, hi = min(v for v, _ in ref.values()), max(v for v, _ in ref.values())
+    ax.set_ylim(lo - 20, hi + 4)          # the step 0 checkpoint lies below this range
     ax.set_xlabel("Learning steps"); ax.set_ylabel("True return of the greedy policy")
-    ax.set_title(title); ax.legend(fontsize=7, loc="lower right")
+    ax.legend(fontsize=7, ncol=3, loc="upper center", bbox_to_anchor=(0.5, -0.17), frameon=False)
     fig.savefig(path); plt.close(fig)
 
 
-def metric_panels(summary, order, path, title):
+def metric_panels(summary, order, path):
     fig, axs = plt.subplots(1, 3, figsize=(10.5, 0.36 * len(order) + 1.2), sharey=True)
     colors = colors_for(order)
-    for ax, (key, lab, scale) in zip(axs, (("utilization", "Slot utilization (%)", 100), ("overtime", "Overtime patients per session", 1),
+    for ax, (key, lab, scale) in zip(axs, (("utilization", "Slot utilisation (%)", 100), ("overtime", "Overtime patients per session", 1),
                                            ("waiting", "Waiting list per session", 1))):
         for i, nm in enumerate(order):
             s = summary[nm][key]
             ax.errorbar(s["mean"] * scale, i, xerr=s["ci"] * scale, fmt="D" if nm.startswith("Ours") else "o",
                         color=colors[nm], capsize=3, ms=6, lw=1.4)
         ax.set_xlabel(lab)
-    axs[0].set_yticks(range(len(order))); axs[0].set_yticklabels(order); axs[0].invert_yaxis()
-    fig.suptitle(title, fontsize=9); fig.savefig(path); plt.close(fig)
+    axs[0].set_yticks(range(len(order))); axs[0].set_yticklabels([label(nm) for nm in order]); axs[0].invert_yaxis()
+    fig.savefig(path); plt.close(fig)
 
 
 def figures(A, B):
     oA = ["Rule", "Sir: DP", "Sir: Monte Carlo", "Sir: Q-learning", "Oracle DP (10x data)", "Ours: Monte Carlo", "Ours: Q-learning", "Ours: DP"]
-    dot_plot(A["methods"], oA, colors_for(oA), f"{D}/fig_A_returns.png", "A. Sir’s simulator: return by method")
-    metric_panels(A["methods"], oA, f"{D}/fig_A_metrics.png", "A. Sir’s simulator: utilization, overtime, waiting")
+    dot_plot(A["methods"], oA, colors_for(oA), f"{D}/fig_A_returns.png")
+    metric_panels(A["methods"], oA, f"{D}/fig_A_metrics.png")
     curve_plot(A["curves"], {"Ours: DP": (A["methods"]["Ours: DP"]["J"]["mean"], "--"), "Rule": (A["methods"]["Rule"]["J"]["mean"], ":")},
-               f"{D}/fig_A_convergence.png", "A. Monte Carlo vs Q-learning convergence")
+               f"{D}/fig_A_convergence.png")
     # data size
     fig, ax = plt.subplots(figsize=(5.6, 3.4))
     xs = [int(k) for k in A["data_size"]]
     for nm, col, mk in (("Sir: DP", COL["DP"], "o"), ("Ours: DP", OURS, "D")):
         ax.errorbar(xs, [A["data_size"][str(x)][nm]["mean"] for x in xs], yerr=[A["data_size"][str(x)][nm]["ci"] for x in xs],
-                    marker=mk, color=col, capsize=3, lw=1.6, label=nm)
-    ax.axhline(A["methods"]["Rule"]["J"]["mean"], color=COL["Rule"], ls=":", lw=1.1, label="Rule")
+                    marker=mk, color=col, capsize=3, lw=1.6, label=label(nm))
+    ax.axhline(A["methods"]["Rule"]["J"]["mean"], color=COL["Rule"], ls=":", lw=1.1, label=label("Rule"))
+    ax.axhline(A["methods"]["Oracle DP (10x data)"]["J"]["mean"], color=COL["Oracle DP"], ls="--", lw=1.0, label=label("Oracle DP (10x data)"))
     ax.set_xscale("log"); ax.set_xticks(xs); ax.set_xticklabels(xs)
     ax.set_xlabel("Logged clinic days used for learning"); ax.set_ylabel("True return"); ax.legend(fontsize=7)
-    ax.set_title("A. How much data each method needs")
     fig.savefig(f"{D}/fig_A_datasize.png"); plt.close(fig)
     # shift
     fig, ax = plt.subplots(figsize=(6.4, 3.4))
@@ -338,30 +357,31 @@ def figures(A, B):
     cs = colors_for(names); w = 0.16
     for i, nm in enumerate(names):
         ax.bar(np.arange(len(conds)) + (i - 2) * w, [A["shift"][c][nm]["mean"] for c in conds], w * 0.92,
-               yerr=[A["shift"][c][nm]["ci"] for c in conds], color=cs[nm], capsize=2, label=nm)
+               yerr=[A["shift"][c][nm]["ci"] for c in conds], color=cs[nm], capsize=2, label=label(nm))
     lo = min(A["shift"][c][nm]["mean"] for c in conds for nm in names)
-    ax.set_ylim(lo * 0.92, None); ax.set_xticks(range(len(conds))); ax.set_xticklabels(conds)
-    ax.set_ylabel("True return"); ax.set_title("A. When the no-show rate changes")
-    ax.legend(fontsize=7, ncol=5, loc="upper center", bbox_to_anchor=(0.5, -0.12), frameon=False)
+    ax.set_ylim(lo * 0.92, None); ax.set_xticks(range(len(conds)))
+    ax.set_xticklabels([c.replace("no-show", "No-show").replace("nominal", "Nominal") for c in conds])
+    ax.set_ylabel("True return")
+    ax.legend(fontsize=7, ncol=3, loc="upper center", bbox_to_anchor=(0.5, -0.12), frameon=False)
     fig.savefig(f"{D}/fig_A_shift.png"); plt.close(fig)
 
     oB = ["Rule", [k for k in B["methods"] if k.startswith("Threshold")][0], [k for k in B["methods"] if k.startswith("Fixed")][0],
           "One-session optimiser", "Sir: DP", "Sir: Monte Carlo", "Sir: Q-learning", "Oracle DP (10x data)",
           "Ours: Monte Carlo", "Ours: Q-learning", "Ours: DP"]
-    dot_plot(B["methods"], oB, colors_for(oB), f"{D}/fig_B_returns.png", "B. Real Kaggle sessions: return by method")
-    metric_panels(B["methods"], oB, f"{D}/fig_B_metrics.png", "B. Real Kaggle sessions: utilization, overtime, waiting")
+    dot_plot(B["methods"], oB, colors_for(oB), f"{D}/fig_B_returns.png")
+    metric_panels(B["methods"], oB, f"{D}/fig_B_metrics.png")
     curve_plot(B["curves"], {"Ours: DP": (B["methods"]["Ours: DP"]["J"]["mean"], "--"), "Rule": (B["methods"]["Rule"]["J"]["mean"], ":")},
-               f"{D}/fig_B_convergence.png", "B. Monte Carlo vs Q-learning convergence")
+               f"{D}/fig_B_convergence.png")
     # demand
     fig, ax = plt.subplots(figsize=(6.4, 3.4))
     keys = list(B["demand"]); names = ["Sir: DP", "Best fixed overbooking", "One-session optimiser", "Ours: DP"]
     cs = {"Sir: DP": COL["DP"], "Best fixed overbooking": "#999999", "One-session optimiser": BASE, "Ours: DP": OURS}; w = 0.2
     for i, nm in enumerate(names):
         vals = [B["demand"][k][nm]["mean"] if isinstance(B["demand"][k][nm], dict) else B["demand"][k][nm] for k in keys]
-        ax.bar(np.arange(len(keys)) + (i - 1.5) * w, vals, w * 0.92, color=cs[nm], label=nm)
+        ax.bar(np.arange(len(keys)) + (i - 1.5) * w, vals, w * 0.92, color=cs[nm], label=label(nm))
     ax.set_xticks(range(len(keys))); ax.set_xticklabels([k.replace(", ", "\n") for k in keys], fontsize=7)
-    ax.set_ylabel("True return"); ax.set_title("B. Busier clinic: more arrivals, costlier waiting")
-    ax.legend(fontsize=7, ncol=4, loc="upper center", bbox_to_anchor=(0.5, -0.2), frameon=False)
+    ax.set_ylabel("True return")
+    ax.legend(fontsize=7, ncol=2, loc="upper center", bbox_to_anchor=(0.5, -0.22), frameon=False)
     fig.savefig(f"{D}/fig_B_demand.png"); plt.close(fig)
 
 
@@ -375,7 +395,13 @@ def show(title, summary, paired_d=None):
         print(f"  {k:60s} {v['mean']:+7.2f} ± {v['ci']:.2f}  p={v['p']:.2g}")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__" and FIG_ONLY:
+    import json
+    with open(f"{D}/results.json") as f:
+        res = json.load(f)
+    figures(res["A"], res["B"])
+    log(f"figures redrawn in {D}")
+elif __name__ == "__main__":
     log(f"config {CFG}")
     A = comparison_A()
     B = comparison_B()

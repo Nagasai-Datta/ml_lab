@@ -1,6 +1,6 @@
 """real_clinic.py -- Paper 7's clinic, rebuilt from real Kaggle sessions (comparison B).
 
-Same decision and reward as domains.Clinic (sir's simulator), but the patients are real:
+Same decision and reward as the Clinic simulator (domains.Clinic), but the patients are real:
   * each session is a real neighbourhood-day; its first min(10, n) appointments fill the regular slots
   * patients pulled in from the waiting list by overbooking are real appointments from the same weekday
   * whether each patient shows up is what actually happened in the data
@@ -8,15 +8,15 @@ State, as the problem statement asks: slots filled x predicted no-show risk band
   slots filled band : 5-7 | 8-9 | 10 regular slots booked                (3)
   risk band         : quartiles of the session's mean predicted no-show  (4)
   waiting band      : 0 | 1-2 | 3-5 | 6-8 | 9+ patients waiting         (5)   -> 60 states
-Action k = 0..4 extra bookings. Reward (as sir's Clinic):
+Action k = 0..4 extra bookings. Reward (as in domains.Clinic):
   shows - 3 x overtime - 0.5 x idle slots - c_wait x waiting list + 0.3 x patients drawn from the list
-Built on sir's rl_core.Domain, so rollout / build_mdp / eval_policy / q_learning / mc_control all work unchanged.
+Built on rl_core.Domain, so rollout / build_mdp / eval_policy / q_learning / mc_control all work unchanged.
 """
 import numpy as np
 from rl_core import Domain, band
 
 SLOT_E = [8, 10]            # slots filled 5-7 -> 0, 8-9 -> 1, 10 -> 2
-WAIT_E = [1, 3, 6, 9]       # same waiting bands as sir's Clinic
+WAIT_E = [1, 3, 6, 9]       # same waiting bands as domains.Clinic
 
 
 class RealClinic(Domain):
@@ -72,7 +72,7 @@ class RealClinic(Domain):
         return self._s(), r, self.t >= self.max_steps, info, 1
 
     def rule(self, s):
-        """sir's overbooking rule, read on this state: +1 when predicted no-shows are low, otherwise +2"""
+        """the overbooking rule of domains.Clinic, read on this state: +1 when predicted no-shows are low, otherwise +2"""
         return 1 if self.decode(s)[1] <= 1 else 2
 
 

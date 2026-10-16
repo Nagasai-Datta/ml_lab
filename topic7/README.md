@@ -13,12 +13,14 @@ Everything for Topic 7 lives in this folder: sir's Paper 7 material (copied unch
 ```
 topic7/
   paper/
-    Paper07_Clinic_Overbooking_Exploration.docx   sir's Paper 7 (our results are added to it; his text stays as written)
+    Paper07_Clinic_Overbooking_Exploration.docx   sir's Paper 7 as rebuilt by his code (same text as the handed-out docx)
+    Paper07_v1_additions.docx                     version 1: sir's paper with every word kept, plus our sections, tables, figures, references
+    Paper07_v2_edited.docx                        version 2: sir's paper and ours written as one paper (same title; his text edited where the parts meet)
     Problem_statements.docx                       sir's problem statements (Topic 7 is the seventh)
   code/
     sir's files (unchanged apart from two path lines, see below)
       rl_core.py domains.py common.py ideas.py    shared library, simulator, experiments (idea 7)
-      paper07.py paper_common.py docx_helper.py   builds the Paper 7 docx from out/idea07/results.json
+      paper07.py paper_common.py docx_helper.py   builds the paper (paper07.py has 14 added one-line calls to our sections)
       paper07_run.py defend_visuals.py            full rerun; defence dashboard (run defend_visuals.py from inside code/)
       kaggle_adapter.py README.md                 sir's adapter and code README
       out/idea07/                                 sir's Paper 7 results.json and figures
@@ -27,7 +29,11 @@ topic7/
       noshow_data.py                              real Kaggle data: cleaning, no-show classifier, clinic sessions
       real_clinic.py                              the clinic rebuilt from real sessions (comparison B)
       planner.py                                  our method + baselines from published work
-      run_topic7.py                               runs every experiment, writes out/topic7/
+      run_topic7.py                               runs every experiment, writes out/topic7/ (--figures redraws figures only)
+      paper07_ext.py                              our paper text: Sections 4.1, 5.1, 6.3, 7.5 to 7.10 and closing additions
+      topic7_refs.py                              our 7 references, in the format of sir's REFS
+      paper07_v2.py                               builds version 2: a copy of sir's builder with his text edited into one paper
+      check_paper.py                              checks both versions against the handed-out docx
       out/topic7/                                 our results.json and figures
   data/
     KaggleV2-May-2016.csv                         real no-show dataset (not in git, see data/README.md)
@@ -98,17 +104,33 @@ A two-minute smoke test (writes `topic7/code/out/topic7_quick/`, not committed):
 python topic7/code/run_topic7.py --quick
 ```
 
-Sir's Paper 7 experiment, figures and docx (about 2 minutes):
+Sir's Paper 7 experiment and figures, then version 1 of the paper (about 2 minutes):
 
 ```
 python topic7/code/paper07_run.py
 ```
 
+Both versions of the paper and the checks (seconds; uses the stored results, the CSV is not needed):
+
+```
+python topic7/code/paper07.py
+python topic7/code/paper07_v2.py
+python topic7/code/check_paper.py
+```
+
+`check_paper.py` checks that every paragraph, table cell and caption of the handed-out Paper 7 is in version 1 unchanged and in the same order; lists every paragraph of sir's that version 2 edits (all others must be unchanged and in order); and checks that our text has no em dashes and no hyphens other than names (Q-learning, no-show) and reference titles or page ranges.
+
 ## What differs from sir's copy
 
-When copied, `code/`, `paper/` and the files in them were byte-identical to `Projects/`. The only change to sir's files is two path lines: `common.py` and `paper_common.py` used absolute paths from the machine the package was built on (`/home/claude/project/...`); they now point to `code/out/` and `paper/`. Rebuilding Paper 7 from the stored results gives text identical to sir's docx. Everything else of ours is in new files.
+When copied, `code/`, `paper/` and the files in them were byte-identical to `Projects/`. Changes to sir's files:
+
+- `common.py` and `paper_common.py`: two path lines. They used absolute paths from the machine the package was built on (`/home/claude/project/...`); they now point to `code/out/` and `paper/`.
+- `paper07.py`: 14 added lines and no removed or changed line. Each added line calls our code (`paper07_ext.py`) at the end of a section, and the last one saves the result as `Paper07_v1_additions.docx`, so sir's own docx in `paper/` is not overwritten.
+
+Everything else of ours is in new files.
 
 ```
 git diff --no-index Projects/code_package/code_package/common.py topic7/code/common.py
 git diff --no-index Projects/code_package/code_package/paper_common.py topic7/code/paper_common.py
+git diff --no-index Projects/code_package/code_package/paper07.py topic7/code/paper07.py
 ```

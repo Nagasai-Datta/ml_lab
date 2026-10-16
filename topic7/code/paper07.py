@@ -3,6 +3,7 @@ from scipy import stats
 from docx_helper import Paper
 from paper_common import *
 import domains
+import paper07_ext as ext  # Topic 7 extension
 
 I = 7
 
@@ -116,6 +117,7 @@ def build():
     P = Paper("Overbooking Clinic Appointments with Reinforcement Learning: Exploration Schedules, Learning Efficiency and Robustness to Shifts in the No-Show Rate",
               "appointment scheduling; no-show; overbooking; exploration schedule; epsilon-greedy; optimistic initialisation; learning curves; distribution shift",
               running="Clinic overbooking, exploration and shift", refdict=REFS)
+    ext.add_refs(P)  # Topic 7 extension
 
     P.abstract(
         "Patients who miss appointments leave clinic slots empty, and booking more patients than slots recovers capacity at the risk of overtime and long waits. "
@@ -176,6 +178,7 @@ def build():
         f"If visits were spread evenly over the {dom.nS} states, a given off-rule state-action pair would be seen about {per_pair:.1f} times in {cfg['n_eps']} logged episodes and about {per_pair_or:.0f} times in {cfg['n_oracle']:,}; since pairs seen fewer than 10 times are treated as unsupported, "
         "the small dataset cannot support most of the actions the optimum uses, while the large one can. (Visits are not spread evenly, so this is an order-of-magnitude argument.) "
         "Second, the waiting list rewards overbooking beyond the show-rate trade-off, because extra bookings drain it. Third, the no-show band is part of the state, so a policy can in principle adapt to a shifted no-show rate if it has learned what each band calls for.")
+    ext.real_data(P)  # Topic 7 extension
 
     P.h1("Method: exploration schedules, normalised learning efficiency and shift evaluation")
     P.p(f"Both learners are trained on a model fitted to the logged episodes and sample experience from that model (never from the simulator). Let k be the step count and T the budget ({cfg['steps']:,} steps). The five schedules are")
@@ -198,6 +201,7 @@ def build():
       fill unobserved states with the logged modal action; evaluate the final policy in each shifted simulator (120 episodes)
  3. normalise curves with Eq. (4); compute AUC and t90 with Eq. (5)
  4. repeat over independent data draws; report means and 95% intervals""")
+    ext.method(P)  # Topic 7 extension
 
     protocol(P, [["Item", "Setting"],
                  ["Simulator", f"clinic overbooking MDP; {nst} states; {dom.nA} actions; {dom.max_steps} sessions per episode"],
@@ -208,6 +212,7 @@ def build():
                  ["Statistics", f"95% CI = 1.96 standard errors over replicates; where a significance statement is made the interval is widened to a t-interval (factor {tf5:.2f} for {nrep} replicates, {tf6:.2f} for {nS})"]],
              cfg["steps"], cfg["seeds"], cfg["n_eval"],
              extra="In the schedule study the standard benchmark's exponential schedule is one of the five. Final policies in the schedule study use the logged modal action in states with no data.")
+    ext.protocol(P)  # Topic 7 extension
 
     P.h1("Results")
     P.h2("Benchmark in the true simulator")
@@ -286,6 +291,7 @@ def build():
     P.p(f"Figure {f4} shows the same for the four policies that the figure includes. The advantage of the learned policies at -0.05 is the largest result of the shift study ({gain_dn[('Q-learning', 'eps exp. decay')]:+.1f} for Q-learning, {sref[dnk]['DP'] - ruleS[dnk]:+.1f} for DP and {gain_dn[('Monte Carlo', 'eps exp. decay')]:+.1f} for MC relative to the rule), and it is consistent across all ten configurations, which gives some confidence it is not an accident of one schedule. "
         f"Two caveats limit it. First, no intervals were stored, and the benchmark noise gauge above (about {max(abs(gauge['Q-learning']), abs(gauge['Monte Carlo'])):.0f} units) is comparable to some of the advantages; the {n_above[dnk]} of {len(cells)} count is the more reliable evidence than any individual difference. "
         f"Second, the rule is a single policy with no learning noise while the learned entries average over replicates, so the comparison is not symmetric. We did not evaluate the oracle under shift, so we cannot say how far any of these policies is from the best possible policy in the shifted clinics, and we did not identify which states produce the advantage; the learned policies differ from the rule in only {n_diff['DP']} to {n_diff['Monte Carlo']} states in replicate 0 (Figure {f2}), so the effect must come from a small set of cells that the shift makes more frequent, which is a hypothesis.")
+    ext.results(P)  # Topic 7 extension
 
     P.h1("Discussion")
     P.p(f"**What the study shows.** (1) Learners trained on {cfg['n_eps']} episodes are ahead of the overbooking rule in the true simulator by {min(v[0] for v in pv.values()):+.1f} to {max(v[0] for v in pv.values()):+.1f} units on average, with only MC clearly so ({pstr(pv['Monte Carlo'][2])}), while a model fitted to ten times the data is ahead by {gap_orc:+.1f}, which points to data coverage rather than the learner as the main barrier (we did not vary the data volume continuously). "
@@ -296,6 +302,7 @@ def build():
         "And it does not show which states drive the robustness result.")
     P.p("**Practical use.** Because exploration inside a fitted model does not collect new data, practitioners should spend effort on what generates the log. A behaviour policy with deliberate variation in the number of extra bookings, run at low stakes, would give the learner support for the actions the optimum uses; the exploration schedule of the learner cannot substitute for that. "
         "For deployment the shift study suggests a cheap sanity check: re-evaluate a learned policy against the existing rule under plausible no-show shifts and report the range, not the nominal value alone.")
+    ext.discussion(P)  # Topic 7 extension
     limitations(P, [
         f"**Few replicates and no intervals for shift.** The schedule study uses {nS} replicates (t-interval factor {tf6:.2f}) and the shift table stores no intervals; the DP entry is one replicate.",
         "**Unequal evaluation sizes.** Rule and DP in the shift table use 300 evaluation episodes, the learners 120 per run; the benchmark and the schedule study use different data seeds.",
@@ -303,13 +310,16 @@ def build():
         "**Exploration inside a model.** The schedules sample from the fitted MDP and cannot reveal unlogged state-action pairs, so the study cannot say anything about exploration in the real environment, where a clinic would face costs of trying.",
         "**Assumed no-show structure.** The shift is a constant offset to the no-show rate; real shifts also change who is booked and the waiting-list inflow. The simulator's reward weights (3 for overtime, 0.4 for waiting) are invented.",
     ])
+    ext.limitations(P)  # Topic 7 extension
     ethics_future(P, "(1) Add an exploration-aware behaviour policy that deliberately varies the extra bookings and test whether the learners then close the gap to the oracle; (2) store per-replicate learning curves and shift results to attach intervals and paired tests; "
                   "(3) evaluate the oracle and a DP policy under shift, and a policy trained on shifted data, to measure the cost of a stale model; (4) compare against a model-based safeguard such as a pessimistic penalty in the supported part of the space; "
                   "(5) apply the adapter to a real no-show table, where overtime and waiting would need to be defined from visit timestamps.")
+    ext.ethics_future(P)  # Topic 7 extension
     P.h1("Conclusion")
     P.p(f"On a simulated clinic, DP, MC and Q-learning trained on {cfg['n_eps']} logged days scored {S['DP']['J']:.1f}, {S['Monte Carlo']['J']:.1f} and {S['Q-learning']['J']:.1f} against {rule_J:.1f} for a conservative overbooking rule and {orc_J:.1f} for DP trained on ten times as much data. "
         f"Five exploration schedules gave learning curves that all plateaued at the same model value: none reached 90% of the possible improvement ({n_reach} of {n_runs}), only the near-greedy Q-learner was clearly slower, and the ordering of schedules on true return differed between learners and was comparable in size to the seed-to-seed discrepancy. "
         f"The learned policies lost less than the rule when no-shows fell by 0.05 (all {n_above[dnk]} of {len(cells)} configurations were ahead) and matched it when they rose by 0.08. These are simulator results, not evidence about real clinics.")
+    ext.conclusion(P)  # Topic 7 extension
     defense(P, [
         ("Why does no schedule reach 90% of the optimum?",
          f"The learners solve a fitted model whose DP solution is worth about {np.mean(meth['DP']['Jor']):.1f} on the oracle model, against a rule value of {Jbeh:.1f} and an optimum of {Jopt:.1f}. They converge to that solution (plateaus {q_last:.1f} and {m_last:.1f}), so the target is out of reach for any schedule; "
@@ -327,11 +337,15 @@ def build():
         ("Why does the oracle score so much more than the learners?",
          f"With {cfg['n_oracle']:,} episodes the high-overbooking actions are supported (about {per_pair_or:.0f} visits per pair against {per_pair:.1f}), and the oracle uses +3 or +4 in {n_act['Oracle DP'][3] + n_act['Oracle DP'][4]} states. The learners use them in at most {max(n_act[k][3] + n_act[k][4] for k in ('DP', 'Monte Carlo', 'Q-learning'))}."),
     ])
+    ext.questions(P, 7)  # Topic 7 extension
     repro(P, 7, ["fig_bars", "fig_learning", "fig_policies", "fig_agreement", "fig_schedules", "fig_efficiency", "fig_shift"])
+    ext.repro(P)  # Topic 7 extension
     code_appendix(P, 7, [domains.Clinic])
     rl_core_appendix(P)
+    ext.code(P)  # Topic 7 extension
     P.refs()
     path = f"{PAP}/Paper07_Clinic_Overbooking_Exploration.docx"
+    path = ext.output_path(path)  # Topic 7 extension
     P.save(path)
     return path
 
