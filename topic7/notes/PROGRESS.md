@@ -1,6 +1,6 @@
 # Topic 7 progress notes
 
-Last updated: 15 Oct 2026 (problem-statement checklist added).
+Last updated: 16 Oct 2026 (Step 1: final code and 20-seed results).
 
 ## 1. The task
 
@@ -18,16 +18,16 @@ Checklist: what sir's Paper 7 covers, and what our version must cover.
 
 | Item | Sir's Paper 7 | Our version | Status |
 |---|---|---|---|
-| Dataset | simulator that copies the columns; no real data | real CSV: no-show model + real clinic sessions | done in prototypes |
-| State: slots filled | not in his state (weekday, no-show band, waiting band) | add slots filled (booked regular slots per session) | to do |
-| State: predicted no-show risk band | his band is the simulator's true rate, not a prediction | band of the classifier's predicted risk for the session's patients | done in prototypes |
+| Dataset | simulator that copies the columns; no real data | real CSV: no-show model + real clinic sessions | done (Step 1) |
+| State: slots filled | not in his state (weekday, no-show band, waiting band) | slots-filled band (5-7, 8-9, 10 booked) in comparison B | done (Step 1) |
+| State: predicted no-show risk band | his band is the simulator's true rate, not a prediction | band of the classifier's predicted risk for the session's patients | done (Step 1) |
 | Action: overbook level | 0 to 4 extra bookings | same | done |
 | Reward: utilization minus waiting and overtime | shows − 3·overtime − 0.5·idle − 0.4·waiting list + 0.3·drawn | same reward, so results compare directly | done |
-| Futuristic angle: adapts to patient behaviour | partly (no-show shift test) | adapts per session to predicted risk and to the waiting list; add shift test | partly |
-| Evaluation: utilization | reports shows and idle slots, not utilization as such | report utilization % (patients seen ÷ capacity) | to do |
-| Evaluation: wait time | waiting-list length | waiting-list length; consider real lead time (ScheduledDay to AppointmentDay) as a real wait measure | to do |
-| Evaluation: overtime | reported | report | to do (prototypes only printed return) |
-| Evaluation: convergence of Monte Carlo vs Q-learning | learning curves + exploration-schedule study | run MC and Q-learning on our new state, show their learning curves against our DP | to do |
+| Futuristic angle: adapts to patient behaviour | partly (no-show shift test) | adapts per session to predicted risk and to the waiting list; shift test (A) and real drift between log and test weeks (B) | done (Step 1) |
+| Evaluation: utilization | reports shows and idle slots, not utilization as such | utilization % of the 10 regular slots | done (Step 1) |
+| Evaluation: wait time | waiting-list length | waiting list per session; real booking lead time reported in the data summary | done (Step 1) |
+| Evaluation: overtime | reported | overtime patients per session | done (Step 1) |
+| Evaluation: convergence of Monte Carlo vs Q-learning | learning curves + exploration-schedule study | MC and Q-learning on sir's model and on ours, true-return learning curves against our DP | done (Step 1) |
 
 ## 2. Decision: Topic 7 (appointment overbooking and no-show management)
 
@@ -111,15 +111,59 @@ PDP minus static optimiser: +0.89 ± 0.14 (p < 0.001, 1,500 paired episodes). So
 
 Story: one-session decisions are fine when the clinic is quiet and break when the waiting list builds up. The CSV has no waiting-list data, so demand levels are assumptions we vary openly.
 
-## 7. Plan for the edit work (not started)
+### 6d. Step 1 final results (`run_topic7.py`, 20 seeds; outputs in `topic7/code/out/topic7/`)
 
-1. Add our methods to the faculty code (new functions next to `ideas.py` idea 7), keeping everything else as is.
-2. Rerun Paper 7's experiment plus ours with more seeds (20), the no-show shift test, and the demand sweep.
-3. Extend `paper07.py` so the paper gains our sections, tables, figures and references, then rebuild the docx.
-4. Presentation: paper summary, what was there, what we did, improvement and why.
+**A. Sir's simulator** (his data seeds 1000-1019, his scoring: 300 episodes). The first 5 seeds reproduce
+his published numbers exactly (DP 162.19, Monte Carlo 166.57, Q-learning 164.36, rule 160.27, oracle 179.01).
+
+| Method | Return | Utilization | Overtime / session | Waiting list / session |
+|---|---|---|---|---|
+| Rule | 160.27 | 91.5% | 0.25 | 4.87 |
+| Sir: DP | 164.53 ± 1.35 | 91.8% | 0.30 | 4.19 |
+| Sir: Monte Carlo | 165.46 ± 2.23 | 91.8% | 0.32 | 3.99 |
+| Sir: Q-learning | 166.02 ± 1.47 | 91.8% | 0.31 | 3.99 |
+| Oracle DP (10x data) | 179.01 | 93.2% | 0.54 | 1.81 |
+| Ours: Monte Carlo (on our model) | 166.30 ± 1.80 | 92.8% | 0.64 | 2.50 |
+| Ours: Q-learning (on our model) | 176.25 ± 0.56 | 92.8% | 0.53 | 2.00 |
+| **Ours: DP** | **184.10 ± 0.01** | 94.0% | 0.52 | 1.65 |
+
+Ours vs sir's DP +19.56 (p = 5e-17), vs his Q-learning +18.08, vs his oracle +5.09.
+Data size (sir's DP vs ours): 25 days 158.5 vs 184.0; 150 days 163.6 vs 184.1; 1,500 days 177.1 vs 184.1.
+No-show shift: +0.08: ours 179.2, sir's DP 165.9; -0.05: ours 182.8, sir's DP 142.3, rule 136.7.
+
+**B. Real Kaggle sessions** (logs 16-25 May, scored on 30 May - 8 Jun, 1,000 episodes; classifier AUC 0.728).
+
+| Method | Return | Utilization | Overtime / session | Waiting list / session |
+|---|---|---|---|---|
+| Rule | 150.82 | 88.9% | 0.20 | 5.28 |
+| Threshold double-booking (p >= 0.25) | 164.53 | 95.5% | 1.02 | 1.76 |
+| Fixed overbooking (+2) | 174.61 | 91.4% | 0.37 | 2.45 |
+| One-session optimiser | 182.03 | 93.8% | 0.51 | 1.83 |
+| Sir: DP | 170.28 ± 0.99 | 90.4% | 0.39 | 2.46 |
+| Sir: Monte Carlo | 162.80 ± 2.26 | 89.2% | 0.38 | 2.86 |
+| Sir: Q-learning | 167.05 ± 2.11 | 90.1% | 0.42 | 2.53 |
+| Oracle DP (10x data) | 173.62 | 91.5% | 0.54 | 1.72 |
+| Ours: Monte Carlo | 169.32 ± 1.70 | 92.4% | 0.65 | 2.00 |
+| Ours: Q-learning | 175.16 ± 1.05 | 92.8% | 0.59 | 1.81 |
+| **Ours: DP** | **182.54 ± 0.01** | 93.8% | 0.53 | 1.67 |
+
+Ours vs one-session optimiser +0.51 (p = 4e-6, paired over 1,000 episodes), vs fixed +2 +7.92, vs sir's DP +12.25,
+vs rule +31.72. Busier clinic (ours vs one-session optimiser): +0.2%, +1.7%, +5.3%, +33.3% for
+(wait cost, arrivals) = (0.4, 1.5), (1.0, 1.5), (0.4, 2.5), (1.0, 2.5).
+
+## 7. Plan and status
+
+1. Step 1, code + first run: new files `noshow_data.py`, `real_clinic.py`, `planner.py`, `run_topic7.py` (sir's files untouched). Done.
+2. Step 2, clean-up: delete `prototypes/`, fold these notes into `topic7/README.md`.
+3. Step 3, paper: extend `paper07.py` (keep sir's results, add our method, results for A and B, why it wins, limitations, anticipated questions, references), rebuild the docx. Needs author names and department.
+4. Step 4, checks: every number in the paper against `out/topic7/results.json`; full rerun from a fresh clone.
+5. Step 5, presentation (.pptx).
 
 ## 8. Caveats to keep in the paper
 
+- Our planner assumes the clinic's own rules are known (slots, overtime and idle costs, how the waiting list empties) and learns only patient behaviour; state this plainly.
+- In the real data only about 9% of sessions have fewer than 10 regular bookings, so the slots-filled band rarely changes.
+- The real no-show rate drifted from 21.2% (log weeks) to 18.5% (test weeks); the classifier predicts 22.0% on average for the test weeks, so our planner is slightly cautious there.
 - Margin over the best static baseline is small at the paper's default settings (+0.5%); the large gains are over Paper 7 and under heavier demand.
 - Baselines from other papers are our simplified re-implementations, not their code.
 - The real-session clinic is still a simulator built from real records, with Paper 7's reward weights.

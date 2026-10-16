@@ -7,3 +7,6 @@ __pycache__/
 
 # raw dataset: kept in the zip, not republished in git (see topic7/data/README.md)
 topic7/data/*.csv
+
+# smoke-test output of run_topic7.py --quick
+topic7/code/out/topic7_quick/
