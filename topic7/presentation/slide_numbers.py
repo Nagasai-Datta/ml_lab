@@ -126,7 +126,9 @@ def main():
         "size": size, "rates": rates, "shift_conds": ["Nominal", "No-show +0.08", "No-show -0.05"], "shift": shift_rows, "shift_best_all": best_all,
         "demand": demand, "conv": conv,
         "sched": {"reach": n_reach, "runs": 2 * len(SCH) * nS, "auc_ng": num(AUC["Q-learning"][NG]["mean"]), "auc_best": num(AUC["Q-learning"][bestQ]["mean"]),
-                  "best": bestQ, "rho": sg(rho_qm)},
+                  "best": bestQ, "rho": sg(rho_qm), "fit": f"{np.mean(meth['DP']['Jor']):.1f}", "opt": f"{Sd['J_opt']:.1f}",
+                  "auc_lo_q": num(min(AUC["Q-learning"][s]["mean"] for s in SCH)), "auc_hi_q": num(max(AUC["Q-learning"][s]["mean"] for s in SCH)),
+                  "auc_lo_m": num(min(AUC["Monte Carlo"][s]["mean"] for s in SCH)), "auc_hi_m": num(max(AUC["Monte Carlo"][s]["mean"] for s in SCH))},
         "refs": refs, "qa": qa,
     }
     path = os.path.join(HERE, "slide_numbers.json")

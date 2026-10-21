@@ -359,7 +359,13 @@
   "auc_ng": "-0.16",
   "auc_best": "0.29",
   "best": "eps exp. decay",
-  "rho": "-0.80"
+  "rho": "-0.80",
+  "fit": "126.6",
+  "opt": "144.9",
+  "auc_lo_q": "-0.16",
+  "auc_hi_q": "0.29",
+  "auc_lo_m": "0.07",
+  "auc_hi_m": "0.30"
  },
  "refs": [
   "[1] Gupta, D. and Denton, B. Appointment scheduling in health care: challenges and opportunities. IIE Transactions 40(9):800-819, 2008.",

@@ -3,7 +3,7 @@
 //     python topic7/presentation/slide_numbers.py     (numbers from results.json)
 //     node topic7/presentation/build_slides.js        (needs node and pptxgenjs: npm install pptxgenjs)
 //
-// Writes topic7/presentation/Topic7_Overbooking_Presentation.pptx: a navy title slide, white content slides with a
+// Writes topic7/presentation/23BCE0757_THEORY_DA.pptx (21 slides, ending on References): a navy title slide, white content slides with a
 // numbered section label, serif headings, tinted panels, navy table headers and the paper's own figures. Every point
 // is at most three lines long. Speaker notes on every slide say who presents it and what to say.
 const path = require("path");
@@ -13,7 +13,7 @@ const pptxgen = require("pptxgenjs");
 const HERE = __dirname;
 const N = JSON.parse(fs.readFileSync(path.join(HERE, "slide_numbers.json"), "utf8"));
 const FIG = (name) => path.join(HERE, "..", "code", "out", "topic7_real", `${name}.png`);
-const OUTFILE = path.join(HERE, "Topic7_Overbooking_Presentation.pptx");
+const OUTFILE = path.join(HERE, "23BCE0757_THEORY_DA.pptx");
 
 // ---------------------------------------------------------------- look
 const HEAD = "Cambria", BODY = "Calibri";
@@ -21,13 +21,17 @@ const C = { navy: "1B2A4A", ink: "1F2933", muted: "5B6770", tint: "EEF2F8", line
   goldTint: "F8EEDA", ice: "CADCFC", zebra: "F7F9FC", white: "FFFFFF" };
 const W = 13.333, X0 = 0.6, CW = W - 2 * X0, TOP = 1.55;
 const PRAKRIT = "Speaker: Prakrit.", NAGASAI = "Speaker: Nagasai.";
-const SEC = { intro: "01   INTRODUCTION", data: "02   DATA AND METHOD", results: "03   RESULTS",
-  wrap: "04   IMPLEMENTATION AND DISCUSSION", refs: "REFERENCES", backup: "BACKUP" };
+const SEC = { intro: "01   INTRODUCTION", bg: "02   BACKGROUND", data: "03   DATA AND METHOD", results: "04   RESULTS",
+  wrap: "05   IMPLEMENTATION AND DISCUSSION", refs: "REFERENCES", backup: "BACKUP" };
+// slide numbers that other slides refer to; the build checks that each named slide lands on its number
+const SL = { methods: 10, results: 12, demand: 15, schedules: 17, limitations: 19, refs: 21, total: 21 };
+let NS = 0;
+const at = (key) => { if (NS !== SL[key]) throw new Error(`slide '${key}' is ${NS}, expected ${SL[key]}`); };
 
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE";
-pres.author = "M Naga Sai Dattu, Prakrit Bahl";
-pres.title = "Overbooking Clinic Appointments with Reinforcement Learning";
+pres.author = "Marupaka Naga Sai Dattu, Prakrit Bahl";
+pres.title = "23BCE0757_THEORY_DA";                  // document title shown by PowerPoint and PDF viewers
 pres.theme = { headFontFace: HEAD, bodyFontFace: BODY };
 
 const footer = { text: { text: "Overbooking Clinic Appointments with Reinforcement Learning   |   Topic 7", options: {
@@ -65,6 +69,7 @@ function runs(items, size = 18, gap = 9, num = false) {
 function start(master, section, title, notes) {
   const sec = section === SEC.refs ? "IMPLEMENTATION AND DISCUSSION" : section.split("   ").pop();
   const s = pres.addSlide({ masterName: master, sectionTitle: sec });
+  NS += 1;
   s.addText(section, { placeholder: "section" });
   s.addText(title, { placeholder: "title" });
   s.addNotes(notes);
@@ -122,6 +127,7 @@ function figure(s, name, x, y, w, aspect, altText) {
 {
   pres.addSection({ title: "INTRODUCTION" });
   const s = pres.addSlide({ masterName: "TITLE_SLIDE", sectionTitle: "INTRODUCTION" });
+  NS += 1;
   s.addText("TOPIC 7   |   APPOINTMENT OVERBOOKING AND NO-SHOW MANAGEMENT", { x: X0, y: 1.0, w: CW, h: 0.35, fontFace: BODY, fontSize: 13,
     bold: true, color: C.ice, charSpacing: 1.5, margin: 0, isTextBox: true, objectName: "topic" });
   s.addText("Overbooking Clinic Appointments with Reinforcement Learning", { x: X0, y: 1.55, w: CW, h: 1.5, fontFace: HEAD, fontSize: 40,
@@ -129,12 +135,12 @@ function figure(s, name, x, y, w, aspect, altText) {
   s.addText("Exploration Schedules, Learning Efficiency and Robustness to Shifts in the No-Show Rate", { x: X0, y: 3.1, w: CW, h: 0.5,
     fontFace: HEAD, fontSize: 20, italic: true, color: C.ice, margin: 0, isTextBox: true, objectName: "subtitle" });
   s.addText([
-    { text: "M Naga Sai Dattu (23BCE0757)", options: { bold: true, breakLine: true } },
+    { text: "Marupaka Naga Sai Dattu (23BCE0757)", options: { bold: true, breakLine: true } },
     { text: "Prakrit Bahl (23BCE0826)", options: { bold: true, breakLine: true } },
     { text: "School of Computer Science and Engineering (SCOPE)", options: { breakLine: true } },
     { text: "Vellore Institute of Technology, Vellore" },
   ], { x: X0, y: 4.6, w: CW, h: 1.6, fontFace: BODY, fontSize: 17, color: C.white, margin: 0, paraSpaceAfter: 4, isTextBox: true, objectName: "authors" });
-  s.addNotes(`${PRAKRIT} Introduce both presenters and the topic. This project takes Paper 7 and its code, evaluates all of its methods on the real Kaggle data, and proposes a method that outperforms them. Prakrit presents the problem, the data and the methods (slides 1 to 8); Nagasai presents the proposed method, the results and the implementation (slides 9 to 18).`);
+  s.addNotes(`${PRAKRIT} Introduce both presenters and the topic. This project takes Paper 7 and its code, evaluates all of its methods on the real Kaggle data, and proposes a method that outperforms them. Prakrit presents the problem, related work, background, the data and the methods (slides 1 to 10); Nagasai presents the proposed method, the results and the implementation (slides 11 to 21).`);
 }
 
 // ================================================================ 2 problem
@@ -155,7 +161,7 @@ function figure(s, name, x, y, w, aspect, altText) {
 // ================================================================ 3 problem statement
 {
   const s = start("TITLE_ONLY", SEC.intro, "Problem Statement and How It Is Addressed",
-    `${PRAKRIT} Go through the problem statement line by line. Every requirement is met on the real data: the state uses the risk band predicted by the classifier, as required; the action is the overbooking level; the reward is Paper 7's reward; and all four evaluation measures are reported on slides 10 to 14.`);
+    `${PRAKRIT} Go through the problem statement line by line. Every requirement is met on the real data: the state uses the risk band predicted by the classifier, as required; the action is the overbooking level; the reward is Paper 7's reward; and all four evaluation measures are reported on slides ${SL.results} to ${SL.schedules}.`);
   table(s, [
     ["Requirement", "How this work addresses it"],
     ["Dataset: Medical Appointment No Shows", `All reported results are computed on the public Kaggle table of ${N.data.appointments} appointments recorded in 2016 [17].`],
@@ -163,7 +169,7 @@ function figure(s, name, x, y, w, aspect, altText) {
     ["Action: overbooking level", `Between 0 and 4 additional patients are booked before each session (${N.mdp.actions} actions).`],
     ["Reward: utilisation less waiting and overtime", "shows − 3 × overtime − 0.5 × idle slots − 0.4 × waiting list + 0.3 × patients admitted from the waiting list, as in Paper 7."],
     ["Futuristic angle: adaptation to patient behaviour", "The policy responds to the predicted risk of each session and to the waiting list, and is evaluated under shifts in the no-show rate."],
-    ["Evaluation: utilisation, waiting, overtime, convergence of MC and Q-learning", "All four measures are reported on scoring weeks never used for learning (slides 10 to 14)."],
+    ["Evaluation: utilisation, waiting, overtime, convergence of MC and Q-learning", `All four measures are reported on scoring weeks never used for learning (slides ${SL.results} to ${SL.schedules}).`],
   ], X0, TOP, [4.3, CW - 4.3], { size: 15, rowH: 0.7, leftCols: [1], name: "statement" });
 }
 
@@ -190,6 +196,90 @@ function figure(s, name, x, y, w, aspect, altText) {
     { b: "Identified gap: ", t: `the learned policies improved on the guideline rule by only ${N.paper7_gain.DP} to ${N.paper7_gain["Monte Carlo"]}, whereas DP with ten times as much data improved on it by ${N.paper7_gain["Oracle DP"]}; no real data were used.` },
     { b: "Objective of this work: ", t: "to evaluate Paper 7's methods on the real dataset, to propose a method that outperforms them, and to report both in the same paper." },
   ], 16, { name: "gap", fill: C.goldTint });
+}
+
+// ================================================================ related work
+{
+  const s = start("TITLE_ONLY", SEC.intro, "Related Work",
+    `${PRAKRIT} Place the study in context. Overbooking with no-shows is a classical operations research problem, and the two published baselines we compare against come from this line of work. Exploration and offline RL explain why learning from logs is difficult, and factored MDPs are the idea on which our method builds.`);
+  const rows = [
+    ["Appointment scheduling and overbooking", [
+      "Appointment systems, no-shows, overbooking and the balance between waiting and overtime are well studied in operations research [1, 2].",
+      "Predicted no-show probabilities have been combined with single session overbooking [6], and fixed risk thresholds for double booking are the baseline for learned policies [7].",
+    ]],
+    ["Exploration in reinforcement learning", [
+      "Epsilon greedy exploration, decaying schedules and optimistic initial values are the standard devices [3]; R-max makes optimism explicit [5].",
+      "Q-learning converges under conditions on its step size [8, 9]; other methods need schedules that are greedy in the limit with infinite exploration [4].",
+    ]],
+    ["Offline RL, shift and structure", [
+      "Learning from logs is limited by data coverage and sensitive to model error, which motivates pessimism and support constraints [10, 11, 12].",
+      "In a factored MDP the transition model is assembled from separately specified parts of the state [13]; this is the idea behind the proposed structured model.",
+    ]],
+  ];
+  rows.forEach(([h, items], i) => {
+    const y = TOP + i * 1.5, ph = 1.38;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: X0, y, w: CW, h: ph, fill: { color: C.tint }, line: { color: C.tint }, rectRadius: 0.08, objectName: `rw${i}_bg` });
+    s.addText(h, { x: X0 + 0.25, y, w: 2.9, h: ph, fontFace: HEAD, fontSize: 17, bold: true, color: C.navy, valign: "middle", margin: 0, isTextBox: true, objectName: `rw${i}_head` });
+    text(s, items, X0 + 3.4, y + 0.17, CW - 3.65, ph - 0.25, 15, { gap: 6, name: `rw${i}_text` });
+  });
+  panel(s, X0, TOP + 4.5, CW, 0.8, null, [
+    { b: "Position of this work: ", t: "not a new scheduling model, but a study of how RL learners behave on real logged data, and of how much they gain from a model that knows the clinic's rules." },
+  ], 15, { name: "position", fill: C.goldTint });
+}
+
+// ================================================================ background: MDPs
+{
+  pres.addSection({ title: "BACKGROUND" });
+  const s = start("TITLE_ONLY", SEC.bg, "Background: Markov Decision Processes",
+    `${PRAKRIT} Introduce the formal model behind every method in the study. The Bellman equation defines the optimal value. Because a clinic only has logs, the model is estimated from counts, and the pessimistic treatment of rarely seen actions is what later limits Paper 7's methods.`);
+  panel(s, X0, TOP, 6.6, 5.25, "Definition", [
+    "A finite MDP is a tuple (S, A, P, R, γ): states, actions, transition probabilities P(s′ | s, a), expected rewards R(s, a) and a discount factor γ in [0, 1).",
+    "A policy π maps each state to an action; its value is the expected discounted return obtained from each state when π is followed [3, 14, 15].",
+    "The optimal value V* satisfies the Bellman optimality equation, and an optimal policy acts greedily with respect to it.",
+  ], 16, { name: "definition" });
+  s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: X0 + 0.25, y: TOP + 3.85, w: 6.1, h: 1.05, fill: { color: C.white }, line: { color: C.line, width: 0.75 },
+    rectRadius: 0.06, objectName: "bellman_bg" });
+  s.addText([
+    { text: "V*(s) = max" }, { text: "a", options: { subscript: true } }, { text: " [ R(s, a) + γ Σ" }, { text: "s′", options: { subscript: true } },
+    { text: " P(s′ | s, a) V*(s′) ]" },
+  ], { x: X0 + 0.25, y: TOP + 3.85, w: 6.1, h: 1.05, fontFace: HEAD, fontSize: 19, italic: true, color: C.navy, align: "center", valign: "middle",
+    margin: 0, isTextBox: true, objectName: "bellman" });
+  panel(s, 7.45, TOP, CW - 6.85, 5.25, "MDPs estimated from logged data", [
+    "Clinical data are logged: transitions (s, a, r, s′) are observed, and counts give P̂(s′ | s, a) = N(s, a, s′) / N(s, a).",
+    "Solving the estimated MDP by DP gives a policy directly; MC and Q-learning learn from experience sampled from it, without involving patients.",
+    "Pairs observed fewer than 10 times are treated pessimistically, because planning on an estimated model is easily misled by its errors [10, 11, 12].",
+  ], 16, { name: "empirical" });
+}
+
+// ================================================================ background: the three methods
+{
+  const s = start("TITLE_ONLY", SEC.bg, "Background: The Three Solution Methods",
+    `${PRAKRIT} Explain the three families compared throughout the study. DP needs the model; MC and Q-learning learn from sampled experience. The comparison of MC and Q-learning is part of the problem statement, so stress the difference: MC waits for complete episodes and has high variance, while Q-learning updates after every step but is biased by bootstrapping.`);
+  const cols = [
+    ["Dynamic programming (DP)", [
+      "Requires the model (P, R) and computes V* as the fixed point of the Bellman equation.",
+      "Value iteration repeats the Bellman update until the change falls below a tolerance.",
+      "Policy iteration alternates exact evaluation with greedy improvement; both give policies of equal value here.",
+    ]],
+    ["Monte Carlo (MC) control", [
+      "Model free: estimates Q(s, a) as the average return after first visits to (s, a) in complete episodes [3, 16].",
+      "Improves a policy that is greedy with respect to Q while still exploring with probability ε.",
+      "Unbiased but of high variance, and learns only once an episode has ended.",
+    ]],
+    ["Q-learning", [
+      "Model free temporal difference method that bootstraps from its own estimates [8].",
+      "Converges to Q* if every pair is visited infinitely often and the step sizes decay suitably.",
+      "Spreads reward information faster than MC, at the cost of bias from bootstrapping on noisy estimates.",
+    ]],
+  ];
+  const pw = (CW - 0.6) / 3;
+  cols.forEach(([h, items], i) => panel(s, X0 + i * (pw + 0.3), TOP, pw, 4.15, h, items, 15, { name: `m${i}` }));
+  s.addText([
+    { text: "Q-learning update:   Q(s, a) ← Q(s, a) + α [ r + γ max" }, { text: "a′", options: { subscript: true } }, { text: " Q(s′, a′) − Q(s, a) ]" },
+  ], { x: X0, y: TOP + 4.35, w: CW, h: 0.45, fontFace: HEAD, fontSize: 17, italic: true, color: C.navy, align: "center", valign: "middle",
+    margin: 0, isTextBox: true, objectName: "q_update" });
+  s.addText(`In this work all three methods learn from the same ${N.mdp.days} logged clinic days; MC and Q-learning sample experience from the estimated MDP, never from the scoring sessions.`,
+    { x: X0, y: TOP + 4.85, w: CW, h: 0.45, fontFace: BODY, fontSize: 15, italic: true, color: C.muted, margin: 0, isTextBox: true, objectName: "bg_note" });
 }
 
 // ================================================================ 5 data
@@ -234,25 +324,11 @@ function figure(s, name, x, y, w, aspect, altText) {
     { x: X0, y: TOP + 2 * ph + 0.45, w: CW, h: 0.45, fontFace: BODY, fontSize: 16, italic: true, color: C.muted, margin: 0, isTextBox: true, objectName: "mdp_note" });
 }
 
-// ================================================================ 7 gaps
-{
-  const s = start("TITLE_ONLY", SEC.data, "Limitations of the Data and How They Are Addressed",
-    `${PRAKRIT} Present this slide openly; it is the first question an examiner is likely to ask. Only attendance is real data. The decisions in the logs are generated with Paper 7's own behaviour policy, and the waiting list follows Paper 7's rule because the table contains none. The paper states the same in Section 6.1 and in its limitations.`);
-  table(s, [
-    ["Not recorded in the dataset", "Approach adopted"],
-    ["Overbooking decisions", "Logs are generated by applying Paper 7's behaviour policy to the real sessions; attendance remains as recorded."],
-    ["Waiting list", "Paper 7's waiting list rule is retained (1.5 new patients per session); this is the only simulated component."],
-    ["Clinics and slots", `A session is defined as one neighbourhood on one day, with ${N.mdp.slots} regular slots.`],
-    ["Times within a day", "Overtime and waiting are measured in patients, as in Paper 7."],
-    ["More than 26 days of data", `${N.mdp.days} logged days of ${N.mdp.sessions} sessions are sampled from the ${N.data.sessions_past} learning sessions.`],
-    ["Variation in the no-show rate", `Recorded outcomes of randomly selected patients are reversed, moving the rate from ${N.rates[0]} to ${N.rates[1]} or ${N.rates[2]}.`],
-  ], X0, TOP, [3.7, CW - 3.7], { size: 16, rowH: 0.68, leftCols: [1], name: "gaps" });
-}
-
 // ================================================================ 8 methods
 {
   const s = start("TITLE_ONLY", SEC.data, "Methods Compared",
     `${PRAKRIT} Paper 7's three learners estimate the full transition model from the logs. The published baselines are simplified implementations, and their settings were tuned on the scoring weeks, which favours them. Every method is scored on the same ${N.mdp.episodes} episodes with the same random numbers. Hand over to Nagasai for the proposed method.`);
+  at("methods");
   panel(s, X0, TOP, 5.9, 3.55, "Methods from Paper 7", [
     "DP (value iteration) on the MDP estimated from the logged data.",
     "Monte Carlo control and Q-learning on the same estimated MDP.",
@@ -294,7 +370,8 @@ function figure(s, name, x, y, w, aspect, altText) {
 {
   pres.addSection({ title: "RESULTS" });
   const s = start("TITLE_ONLY", SEC.results, "Main Results on the Real Scoring Sessions",
-    `${NAGASAI} Read the table from the top: the guideline rule, the published baselines, Paper 7's learners and the oracle, then the structured model. It attains ${N.real["Ours: DP"]}: ${N.ours_vs.DP.d} over DP, ${N.ours_vs["Q-learning"].d} over Q-learning and ${N.ours_vs["Monte Carlo"].d} over MC (all ${N.ours_vs.DP.p}), and ${N.ours_vs_ep["Oracle DP"].d} over the oracle with ten times the data. Its margin over the single session optimiser is small (${N.ours_vs_ep["Single session optimiser"].d}) but consistent; slide 13 shows when it grows. It also has the shortest waiting list.`);
+    `${NAGASAI} Read the table from the top: the guideline rule, the published baselines, Paper 7's learners and the oracle, then the structured model. It attains ${N.real["Ours: DP"]}: ${N.ours_vs.DP.d} over DP, ${N.ours_vs["Q-learning"].d} over Q-learning and ${N.ours_vs["Monte Carlo"].d} over MC (all ${N.ours_vs.DP.p}), and ${N.ours_vs_ep["Oracle DP"].d} over the oracle with ten times the data. Its margin over the single session optimiser is small (${N.ours_vs_ep["Single session optimiser"].d}) but consistent; slide ${SL.demand} shows when it grows. It also has the shortest waiting list.`);
+  at("results");
   const rows = [["Method", "Return (± 95% CI)", "Utilisation", "Overtime", "Waiting list"]];
   const hl = [];
   N.table.forEach((r, i) => { rows.push([(r.paper7 ? "Paper 7: " : "") + r.name, r.J, r.util, r.over, r.wait]); if (r.ours && r.name.includes("DP")) hl.push(i + 1); });
@@ -340,6 +417,7 @@ function figure(s, name, x, y, w, aspect, altText) {
 {
   const s = start("TITLE_ONLY", SEC.results, "Benefit of Planning Across Sessions Under Higher Demand",
     `${NAGASAI} The single session optimiser considers only the current session. When waiting is more costly or more patients join the list, planning across sessions pays off, and the gain grows from ${N.demand[0].gain} to ${N.demand[N.demand.length - 1].gain}. DP on the estimated MDP deteriorates in the busiest setting because the actions it needs are rarely logged.`);
+  at("demand");
   const rows = [["Waiting cost", "New patients per session", "DP on estimated MDP", "Best fixed booking", "Single session optimiser", "Structured model", "Gain"]];
   N.demand.forEach((r) => rows.push([r.cost, r.arrivals, r.dp, r.fixed, r.single, r.ours, r.gain]));
   table(s, rows, X0, TOP, [1.5, 1.95, 1.95, 1.75, 2.05, 1.75, 1.18], { size: 15, rowH: 0.5, name: "demand" });
@@ -347,23 +425,37 @@ function figure(s, name, x, y, w, aspect, altText) {
     "The single session optimiser considers only the current session, whereas the structured model also accounts for the effect of each decision on the waiting list in later sessions.",
     `This advantage grows with demand: the gain over the single session optimiser rises from ${N.demand[0].gain} to ${N.demand[N.demand.length - 1].gain}.`,
     `DP on the estimated MDP deteriorates sharply in the busiest setting (${N.demand[N.demand.length - 1].dp}), because the actions it requires are rarely observed in the logs.`,
-    "A waiting cost of 0.4 with 1.5 new patients per session corresponds to Paper 7's setting (slide 10).",
+    `A waiting cost of 0.4 with 1.5 new patients per session corresponds to Paper 7's setting (slide ${SL.results}).`,
   ], X0, TOP + 3.0, CW, 2.3, 16, { gap: 9 });
 }
 
 // ================================================================ 14 convergence
 {
   const s = start("TITLE_ONLY", SEC.results, "Convergence of Monte Carlo Control and Q-learning",
-    `${NAGASAI} The problem statement asks for this comparison. The curves show the true return of the greedy policy as learning proceeds. Q-learning ends higher than MC on both models, and both perform better on the structured model. In Paper 7's exploration schedule study, rerun on the real data, no schedule comes within 90% of the optimum, so exploration is not the bottleneck; the data are.`);
+    `${NAGASAI} The problem statement asks for this comparison. The curves show the true return of the greedy policy as learning proceeds. Q-learning ends higher than MC on both models, and both perform better on the structured model. Point out that both learners settle early on the structured model. The next slide covers the exploration schedules.`);
+  const settle = Math.max(...["Monte Carlo|ours", "Q-learning|ours"].map((k) => +N.conv[k].settle.replace(/,/g, ""))).toLocaleString("en-US");
   figure(s, "fig_convergence", X0 + 0.1, TOP + 0.1, 6.5, 1178 / 762, "True return of the greedy policy during learning for Monte Carlo and Q-learning, on the estimated MDP and on the structured model");
   text(s, [
     `On the estimated MDP, MC converges to a return of ${N.conv["Monte Carlo|sir"].final} and Q-learning to ${N.conv["Q-learning|sir"].final}.`,
     `On the structured model, Q-learning reaches ${N.conv["Q-learning|ours"].final} and MC ${N.conv["Monte Carlo|ours"].final}, against ${N.real["Ours: DP"]} for its DP solution.`,
     "Q-learning approaches the DP solution more closely than MC on both models.",
-    `No exploration schedule reached 90% of the possible improvement in any of ${N.sched.runs} runs.`,
-    `For Q-learning, near greedy exploration was the slowest schedule (AUC ${N.sched.auc_ng} against ${N.sched.auc_best}).`,
-    `The ranking of the schedules differs between MC and Q-learning (rank correlation ${N.sched.rho}).`,
-  ], 7.55, TOP, W - X0 - 7.55, 5.3, 16, { gap: 10 });
+    `On the structured model, both learners settle within ${settle} of the ${N.mdp.steps} learning steps.`,
+  ], 7.55, TOP, W - X0 - 7.55, 5.3, 16, { gap: 12 });
+}
+
+// ================================================================ exploration schedules
+{
+  const s = start("TITLE_ONLY", SEC.results, "Exploration Schedules",
+    `${NAGASAI} Paper 7's schedule study, rerun on the real data. Five ways of balancing exploration and exploitation were compared for both learners. None reaches 90% of the possible improvement, because the learners level off near the solution of the fitted model; exploring inside that model cannot reveal actions that the logs never contain. The only clear effect is that near greedy exploration slows Q-learning down.`);
+  at("schedules");
+  figure(s, "fig_schedules", X0 + 0.1, TOP + 0.1, 6.9, 1422 / 758, "Normalised learning curves of Monte Carlo control and Q-learning for the five exploration schedules");
+  text(s, [
+    "Five schedules were compared for MC and Q-learning: constant ε = 0.1, exponential decay, a 1/k decay, near greedy (ε = 0.02) and optimistic initialisation.",
+    "Learning curves are normalised so that 0 is the clinic's behaviour and 1 the optimum, and summarised by their mean value (AUC).",
+    `No run reached 90% of the possible improvement (0 of ${N.sched.runs}): the learners level off near the fitted model's DP solution (${N.sched.fit}), below the optimum (${N.sched.opt}).`,
+    `For Q-learning, near greedy exploration was the slowest (AUC ${N.sched.auc_ng} against ${N.sched.auc_best} for exponential decay).`,
+    "Exploration inside a fitted model cannot reveal actions absent from the logs, so the data, not the schedule, limit performance.",
+  ], 7.85, TOP, W - X0 - 7.85, 5.3, 15, { gap: 8 });
 }
 
 // ================================================================ 15 code
@@ -398,6 +490,7 @@ content(SEC.wrap, "Limitations", [
   "The published baselines are simplified implementations whose settings were tuned on the scoring sessions, which favours them.",
   "The findings concern algorithms rather than clinical practice, and no clinical claim is made.",
 ], `${NAGASAI} State these plainly. The first matters most: the data record who attended, not what a clinic decided, so the decisions are generated with Paper 7's behaviour policy. Applying the method in practice would require a clinic that can state its own rules.`);
+at("limitations");
 
 // ================================================================ 17 conclusion
 {
@@ -419,33 +512,16 @@ content(SEC.wrap, "Limitations", [
 {
   const s = start("TITLE_ONLY", SEC.refs, "References",
     `${NAGASAI} References are numbered as in the paper. The dataset is [17]; the published baselines are [6] and [7]; the factored MDP idea behind the proposed method is [13]. Thank the audience and invite questions.`);
+  at("refs");
   const half = Math.ceil(N.refs.length / 2);
   const col = (list) => list.map((r, i) => ({ text: r, options: { fontSize: 12, fontFace: BODY, color: C.ink, paraSpaceAfter: 4, breakLine: i < list.length - 1 } }));
   s.addText(col(N.refs.slice(0, half)), { x: X0, y: TOP - 0.1, w: 5.95, h: 5.4, valign: "top", margin: 0, isTextBox: true, objectName: "refs_left" });
   s.addText(col(N.refs.slice(half)), { x: X0 + 6.18, y: TOP - 0.1, w: 5.95, h: 5.4, valign: "top", margin: 0, isTextBox: true, objectName: "refs_right" });
 }
 
-// ================================================================ backup: expected questions
-{
-  pres.addSection({ title: "BACKUP" });
-  const pick = [3, 7, 8, 9, 10, 1];                       // question numbers from the paper's Appendix A (version 3)
-  for (let i = 0; i < pick.length; i += 2) {
-    const s = start("TITLE_ONLY", SEC.backup, `Anticipated Questions (${i / 2 + 1} of ${pick.length / 2})`,
-      "Backup slide for questions. The answers are the same as in Appendix A of version 3 of the paper.");
-    [pick[i], pick[i + 1]].forEach((q, j) => {
-      const qa = N.qa[q - 1];
-      // point to the slides rather than to the paper's own section and table numbers
-      const ans = qa.a.replace("which Section 9 lists as a limitation", "which is one of our limitations (slide 16)")
-        .replace("(Table 9)", "(slide 13)").replace("(Section 6.1)", "(slide 7)");
-      panel(s, X0, TOP + j * 2.7, CW, 2.45, qa.q, null, 16, { name: `q${q}` });
-      s.addText(ans, { x: X0 + 0.25, y: TOP + j * 2.7 + 0.7, w: CW - 0.5, h: 1.6, fontFace: BODY, fontSize: 16, color: C.ink, valign: "top",
-        margin: 0, isTextBox: true, objectName: `a${q}` });
-    });
-  }
-}
-
 // pptxgenjs writes a second <a:pPr> (with buNone) after the first run of a paragraph that has several runs, which
 // removes the bullet of every "bold lead-in + text" item; drop those stray properties before saving.
+if (NS !== SL.total) throw new Error(`deck has ${NS} slides, expected ${SL.total}`);
 const JSZip = require(require.resolve("jszip", { paths: [path.dirname(require.resolve("pptxgenjs"))] }));
 pres.write({ outputType: "nodebuffer" }).then(async (buf) => {
   const zip = await JSZip.loadAsync(buf);

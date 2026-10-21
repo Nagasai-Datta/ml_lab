@@ -11,9 +11,10 @@ Version 3 of the paper is sir's Paper 7 with every experiment run on the real Ka
 | `code/paper07_v4.py` | builds version 4 by calling `paper07_v3.build(short=True)`: version 3 without the reviewer questions and the source code |
 | `code/check_paper_v4.py` | runs the version 3 checks on version 4 and confirms it is version 3 with only those two appendices removed |
 | `paper/Paper07_v4_real_data_short.docx` | version 4 of the paper (18 pages; version 3 is 27) |
-| `presentation/Topic7_Overbooking_Presentation.pptx` | the presentation: 18 slides plus 3 backup slides of expected questions; speaker notes on every slide say who presents it and what to say |
+| `presentation/23BCE0757_THEORY_DA.pptx` (and `.pdf`) | the presentation: 21 slides ending on References; speaker notes on every slide say who presents it and what to say |
 | `presentation/slide_numbers.py` | computes every number on the slides from `results.json` (and Paper 7's own results for slide 4); writes `slide_numbers.json` |
 | `presentation/build_slides.js` | builds the .pptx from `slide_numbers.json` and the figures (needs node and `npm install pptxgenjs`; not needed to open the deck) |
+| `paper/23BCE0757_Paper07.docx` (and `.pdf`) | the submitted paper: version 4 edited by hand (full first name, Section 6.1 and the reproducibility appendix removed) |
 
 ## Run (from the repo root, with the virtual environment active)
 
