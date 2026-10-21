@@ -16,8 +16,8 @@ V3 = os.path.normpath(os.path.join(HERE, "..", "paper", "Paper07_v3_real_data.do
 ALLOWED = re.compile(r"^(Q-learning\.?|Q-learner|[Nn]o-shows?|[Ss]cikit-learn|double-booking|multi-objective|KaggleV2-May-2016\.csv\.?|\d+-\d+)$")
 
 
-def main():
-    o, v = items(ORIG), items(V3)
+def main(path=V3, label="Version 3"):
+    o, v = items(ORIG), items(path)
     prose = [t for k, t in v if k != "code"]
     dashes = [t for t in prose if "—" in t or "–" in t]
     sir = [t for t in prose if re.search(r"\bsir\b", t, re.I)]
@@ -29,7 +29,7 @@ def main():
     n_tab = len({t.split(".")[0] for k, t in v if k == "text" and re.match(r"^Table \d+\. ", t)})
     n_fig = len({t.split(".")[0] for k, t in v if k == "text" and re.match(r"^Figure \d+\. ", t)})
     n_ref = sum(1 for k, t in v if k == "text" and re.match(r"^\[\d+\] ", t))
-    print(f"Version 3: {len(v)} items; {n_tab} tables, {n_fig} figures, {n_ref} references")
+    print(f"{label}: {len(v)} items; {n_tab} tables, {n_fig} figures, {n_ref} references")
     print(f"  em or en dashes: {len(dashes)}; 'sir': {len(sir)}")
     print("  hyphenated words added beyond Paper 7's text:", ", ".join(f"{w} ({n})" for w, n in new.items()) or "none")
     print("  of which not a name, title, page range or file name:", ", ".join(odd) or "none")

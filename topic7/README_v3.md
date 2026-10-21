@@ -1,6 +1,6 @@
-# Topic 7, version 3: everything on the real data
+# Topic 7, versions 3 and 4 and the presentation: everything on the real data
 
-Version 3 of the paper is sir's Paper 7 with every experiment run on the real Kaggle table (Medical Appointment No Shows) instead of the simulator, and with our method compared against his methods and against baselines from published work on the same data. It is built only from new files; versions 1 and 2 and all earlier files are unchanged.
+Version 3 of the paper is sir's Paper 7 with every experiment run on the real Kaggle table (Medical Appointment No Shows) instead of the simulator, and with our method compared against his methods and against baselines from published work on the same data. It is built only from new files; versions 1 and 2 and all earlier files are unchanged. Version 4 is the same paper without Appendix A (reviewer questions) and Appendix C (source code).
 
 | File | What it is |
 |---|---|
@@ -8,6 +8,12 @@ Version 3 of the paper is sir's Paper 7 with every experiment run on the real Ka
 | `code/paper07_v3.py` | builds the paper from `out/topic7_real/results.json` with sir's layout code; every number is computed from that file |
 | `code/check_paper_v3.py` | checks the paper: no em dashes, no hyphens beyond names and references, table, figure and reference counts |
 | `paper/Paper07_v3_real_data.docx` | version 3 of the paper (same title as Paper 7) |
+| `code/paper07_v4.py` | builds version 4 by calling `paper07_v3.build(short=True)`: version 3 without the reviewer questions and the source code |
+| `code/check_paper_v4.py` | runs the version 3 checks on version 4 and confirms it is version 3 with only those two appendices removed |
+| `paper/Paper07_v4_real_data_short.docx` | version 4 of the paper (18 pages; version 3 is 27) |
+| `presentation/Topic7_Overbooking_Presentation.pptx` | the presentation: 18 slides plus 3 backup slides of expected questions; speaker notes on every slide say who presents it and what to say |
+| `presentation/slide_numbers.py` | computes every number on the slides from `results.json` (and Paper 7's own results for slide 4); writes `slide_numbers.json` |
+| `presentation/build_slides.js` | builds the .pptx from `slide_numbers.json` and the figures (needs node and `npm install pptxgenjs`; not needed to open the deck) |
 
 ## Run (from the repo root, with the virtual environment active)
 
@@ -15,6 +21,10 @@ Version 3 of the paper is sir's Paper 7 with every experiment run on the real Ka
 python topic7/code/run_real.py          # about 30 minutes; needs topic7/data/KaggleV2-May-2016.csv
 python topic7/code/paper07_v3.py        # seconds
 python topic7/code/check_paper_v3.py    # must end with ALL CHECKS PASSED
+python topic7/code/paper07_v4.py        # version 4, seconds
+python topic7/code/check_paper_v4.py    # must end with ALL VERSION 4 CHECKS PASSED
+python topic7/presentation/slide_numbers.py   # optional: numbers for the slides
+node topic7/presentation/build_slides.js       # optional: rebuild the slides (node and pptxgenjs)
 ```
 
 `python topic7/code/run_real.py --figures` redraws the figures from the saved results; `--quick` is a two minute smoke test whose output is not committed.

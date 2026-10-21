@@ -1,0 +1,428 @@
+{
+ "data": {
+  "appointments": "110,487",
+  "patients": "62,277",
+  "neighbourhoods": 81,
+  "days": 26,
+  "noshow": "20.2%",
+  "lead_same": "4.7%",
+  "lead_31": "33.0%",
+  "weekday_lo": "19.4%",
+  "weekday_hi": "21.2%",
+  "auc": "0.728",
+  "pred": "22.0%",
+  "obs": "19.8%",
+  "sessions_past": 506,
+  "sessions_future": 592,
+  "noshow_past": "21.2%",
+  "noshow_future": "18.5%",
+  "not_full": "9%"
+ },
+ "mdp": {
+  "states": 60,
+  "actions": 5,
+  "slots": 10,
+  "sessions": 40,
+  "days": 150,
+  "oracle_days": "1,500",
+  "seeds": 20,
+  "episodes": "1,000",
+  "steps": "150,000",
+  "n_est": 26,
+  "n_emp": "18,300"
+ },
+ "paper7": {
+  "Rule": "160.3",
+  "DP": "162.2",
+  "Monte Carlo": "166.6",
+  "Q-learning": "164.4",
+  "Oracle DP": "179.0"
+ },
+ "paper7_gain": {
+  "DP": "+1.9",
+  "Monte Carlo": "+6.3",
+  "Q-learning": "+4.1",
+  "Oracle DP": "+18.7"
+ },
+ "real": {
+  "Rule": "150.8",
+  "Oracle DP": "173.6",
+  "Single session optimiser": "182.0",
+  "Threshold double booking": "164.5",
+  "Fixed booking": "174.6",
+  "Behavior": "150.8",
+  "DP": "170.3",
+  "Monte Carlo": "162.8",
+  "Q-learning": "167.0",
+  "Ours: DP": "182.5",
+  "Ours: Monte Carlo": "169.3",
+  "Ours: Q-learning": "175.2"
+ },
+ "gain_rule": {
+  "DP": "+19.5",
+  "Monte Carlo": "+12.0",
+  "Q-learning": "+16.2"
+ },
+ "table": [
+  {
+   "name": "Guideline rule",
+   "ours": false,
+   "paper7": true,
+   "J": "150.8",
+   "util": "88.9%",
+   "over": "0.20",
+   "wait": "5.28"
+  },
+  {
+   "name": "Threshold double booking (θ = 0.25)",
+   "ours": false,
+   "paper7": false,
+   "J": "164.5",
+   "util": "95.5%",
+   "over": "1.02",
+   "wait": "1.76"
+  },
+  {
+   "name": "Fixed booking (k = 2)",
+   "ours": false,
+   "paper7": false,
+   "J": "174.6",
+   "util": "91.4%",
+   "over": "0.37",
+   "wait": "2.45"
+  },
+  {
+   "name": "Single session optimiser",
+   "ours": false,
+   "paper7": false,
+   "J": "182.0",
+   "util": "93.8%",
+   "over": "0.51",
+   "wait": "1.83"
+  },
+  {
+   "name": "DP on estimated MDP",
+   "ours": false,
+   "paper7": true,
+   "J": "170.3 ± 0.99",
+   "util": "90.4%",
+   "over": "0.39",
+   "wait": "2.46"
+  },
+  {
+   "name": "Monte Carlo control",
+   "ours": false,
+   "paper7": true,
+   "J": "162.8 ± 2.26",
+   "util": "89.2%",
+   "over": "0.38",
+   "wait": "2.86"
+  },
+  {
+   "name": "Q-learning",
+   "ours": false,
+   "paper7": true,
+   "J": "167.0 ± 2.11",
+   "util": "90.1%",
+   "over": "0.42",
+   "wait": "2.53"
+  },
+  {
+   "name": "Oracle DP (10x data)",
+   "ours": false,
+   "paper7": true,
+   "J": "173.6",
+   "util": "91.5%",
+   "over": "0.54",
+   "wait": "1.72"
+  },
+  {
+   "name": "Monte Carlo, structured model",
+   "ours": true,
+   "paper7": false,
+   "J": "169.3 ± 1.70",
+   "util": "92.4%",
+   "over": "0.65",
+   "wait": "2.00"
+  },
+  {
+   "name": "Q-learning, structured model",
+   "ours": true,
+   "paper7": false,
+   "J": "175.2 ± 1.05",
+   "util": "92.8%",
+   "over": "0.59",
+   "wait": "1.81"
+  },
+  {
+   "name": "Structured model DP (ours)",
+   "ours": true,
+   "paper7": false,
+   "J": "182.5 ± 0.01",
+   "util": "93.8%",
+   "over": "0.53",
+   "wait": "1.67"
+  }
+ ],
+ "ours_vs": {
+  "DP": {
+   "d": "+12.3",
+   "p": "p < 0.001"
+  },
+  "Monte Carlo": {
+   "d": "+19.7",
+   "p": "p < 0.001"
+  },
+  "Q-learning": {
+   "d": "+15.5",
+   "p": "p < 0.001"
+  },
+  "Rule": {
+   "d": "+31.7",
+   "p": "p < 0.001"
+  }
+ },
+ "ours_vs_ep": {
+  "Single session optimiser": {
+   "d": "+0.51",
+   "p": "p < 0.001",
+   "pct": "0.3%"
+  },
+  "Oracle DP": {
+   "d": "+8.92",
+   "p": "p < 0.001",
+   "pct": "5.1%"
+  }
+ },
+ "size": [
+  {
+   "days": "25",
+   "dp": "149.3 ± 0.4",
+   "ours": "182.5"
+  },
+  {
+   "days": "50",
+   "dp": "157.0 ± 4.1",
+   "ours": "182.5"
+  },
+  {
+   "days": "150",
+   "dp": "170.8 ± 1.6",
+   "ours": "182.5"
+  },
+  {
+   "days": "500",
+   "dp": "172.8 ± 1.4",
+   "ours": "182.5"
+  },
+  {
+   "days": "1,500",
+   "dp": "173.5 ± 1.6",
+   "ours": "182.5"
+  }
+ ],
+ "rates": [
+  "18.5%",
+  "26.4%",
+  "13.5%"
+ ],
+ "shift_conds": [
+  "Nominal",
+  "No-show +0.08",
+  "No-show -0.05"
+ ],
+ "shift": [
+  {
+   "name": "Guideline rule",
+   "ours": false,
+   "vals": [
+    "150.8",
+    "129.3",
+    "157.4"
+   ]
+  },
+  {
+   "name": "DP on estimated MDP",
+   "ours": false,
+   "vals": [
+    "170.3",
+    "155.6",
+    "171.5"
+   ]
+  },
+  {
+   "name": "Monte Carlo control",
+   "ours": false,
+   "vals": [
+    "162.8",
+    "147.7",
+    "165.6"
+   ]
+  },
+  {
+   "name": "Q-learning",
+   "ours": false,
+   "vals": [
+    "167.0",
+    "153.4",
+    "168.1"
+   ]
+  },
+  {
+   "name": "Oracle DP (10x data)",
+   "ours": false,
+   "vals": [
+    "173.6",
+    "164.1",
+    "171.5"
+   ]
+  },
+  {
+   "name": "Single session optimiser",
+   "ours": false,
+   "vals": [
+    "182.0",
+    "172.0",
+    "176.8"
+   ]
+  },
+  {
+   "name": "Structured model DP (ours)",
+   "ours": true,
+   "vals": [
+    "182.5",
+    "173.2",
+    "177.4"
+   ]
+  }
+ ],
+ "shift_best_all": true,
+ "demand": [
+  {
+   "cost": "0.4",
+   "arrivals": "1.5",
+   "dp": "170.6",
+   "fixed": "174.5",
+   "single": "181.6",
+   "ours": "182.0",
+   "gain": "+0.2%"
+  },
+  {
+   "cost": "1.0",
+   "arrivals": "1.5",
+   "dp": "144.0",
+   "fixed": "149.2",
+   "single": "155.3",
+   "ours": "157.9",
+   "gain": "+1.7%"
+  },
+  {
+   "cost": "0.4",
+   "arrivals": "2.5",
+   "dp": "111.8",
+   "fixed": "160.1",
+   "single": "160.0",
+   "ours": "168.4",
+   "gain": "+5.3%"
+  },
+  {
+   "cost": "1.0",
+   "arrivals": "2.5",
+   "dp": "42.3",
+   "fixed": "110.7",
+   "single": "94.6",
+   "ours": "126.1",
+   "gain": "+33.3%"
+  }
+ ],
+ "conv": {
+  "Monte Carlo|sir": {
+   "final": "161.9",
+   "settle": "12,000"
+  },
+  "Q-learning|sir": {
+   "final": "166.4",
+   "settle": "66,000"
+  },
+  "Monte Carlo|ours": {
+   "final": "169.6",
+   "settle": "18,000"
+  },
+  "Q-learning|ours": {
+   "final": "175.5",
+   "settle": "12,000"
+  }
+ },
+ "sched": {
+  "reach": 0,
+  "runs": 60,
+  "auc_ng": "-0.16",
+  "auc_best": "0.29",
+  "best": "eps exp. decay",
+  "rho": "-0.80"
+ },
+ "refs": [
+  "[1] Gupta, D. and Denton, B. Appointment scheduling in health care: challenges and opportunities. IIE Transactions 40(9):800-819, 2008.",
+  "[2] Zacharias, C. and Pinedo, M. Appointment scheduling with no-shows and overbooking. Production and Operations Management 23(5):788-801, 2014.",
+  "[3] Sutton, R. S. and Barto, A. G. Reinforcement Learning: An Introduction, 2nd ed. MIT Press, 2018.",
+  "[4] Singh, S., Jaakkola, T., Littman, M. L. and Szepesvari, C. Convergence results for single-step on-policy reinforcement-learning algorithms. Machine Learning 38(3):287-308, 2000.",
+  "[5] Brafman, R. I. and Tennenholtz, M. R-max - a general polynomial time algorithm for near-optimal reinforcement learning. Journal of Machine Learning Research 3:213-231, 2002.",
+  "[6] Topuz, K., Urban, T. L., Russell, R. A. and Yildirim, M. B. Decision support system for appointment scheduling and overbooking under patient no-show behavior. Annals of Operations Research 342(1):845-873, 2024.",
+  "[7] Amalina, N. N. and An, H. Adaptive double-booking strategy for outpatient scheduling using multi-objective reinforcement learning. arXiv:2603.07270, 2026.",
+  "[8] Watkins, C. J. C. H. and Dayan, P. Q-learning. Machine Learning 8(3-4):279-292, 1992.",
+  "[9] Even-Dar, E. and Mansour, Y. Learning rates for Q-learning. Journal of Machine Learning Research 5:1-25, 2003.",
+  "[10] Levine, S., Kumar, A., Tucker, G. and Fu, J. Offline reinforcement learning: tutorial, review, and perspectives on open problems. arXiv:2005.01643, 2020.",
+  "[11] Jin, Y., Yang, Z. and Wang, Z. Is pessimism provably efficient for offline RL? Proceedings of the 38th International Conference on Machine Learning (ICML), 2021.",
+  "[12] Kumar, A., Zhou, A., Tucker, G. and Levine, S. Conservative Q-learning for offline reinforcement learning. Advances in Neural Information Processing Systems 33, 2020.",
+  "[13] Boutilier, C., Dearden, R. and Goldszmidt, M. Stochastic dynamic programming with factored representations. Artificial Intelligence 121(1-2):49-107, 2000.",
+  "[14] Bellman, R. Dynamic Programming. Princeton University Press, 1957.",
+  "[15] Puterman, M. L. Markov Decision Processes: Discrete Stochastic Dynamic Programming. Wiley, 1994.",
+  "[16] Singh, S. P. and Sutton, R. S. Reinforcement learning with replacing eligibility traces. Machine Learning 22:123-158, 1996.",
+  "[17] Hoppen, J. Medical appointment no shows. Kaggle dataset, kaggle.com/datasets/joniarroba/noshowappointments, 2016.",
+  "[18] Friedman, J. H. Greedy function approximation: a gradient boosting machine. Annals of Statistics 29(5):1189-1232, 2001.",
+  "[19] Zadrozny, B. and Elkan, C. Transforming classifier scores into accurate multiclass probability estimates. Proceedings of the 8th ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD), 2002.",
+  "[20] Pedregosa, F. et al. Scikit-learn: machine learning in Python. Journal of Machine Learning Research 12:2825-2830, 2011."
+ ],
+ "qa": [
+  {
+   "q": "Why does no schedule reach 90% of the optimum?",
+   "a": "The learners solve a fitted model whose DP solution is worth about 126.6 on the oracle model, against a rule value of 113.6 and an optimum of 144.9. They end near that solution (Q-learning 124.4, MC 117.3), so the target is out of reach for any schedule; the limit is the support of the logged data, not exploration."
+  },
+  {
+   "q": "If exploration matters little, why is near greedy Q-learning slower?",
+   "a": "Near greedy Q-learning has a mean AUC of -0.16 against 0.29 for the best schedule, and a plausible reason (not tested separately) is that it tries few actions early and needs many steps to correct its initial values. That is a speed effect within a fixed model; its final value is within the range of the other schedules."
+  },
+  {
+   "q": "Why are the learners so far ahead of the rule on real data?",
+   "a": "The rule books one or two extra patients, and with about 19% of patients not coming that leaves 44.3 idle slots per episode and a summed waiting list of 211. The learners book more in some states and cut the waiting list to 98 to 115."
+  },
+  {
+   "q": "Can we conclude that exponential decay is best for Q-learning?",
+   "a": "No. Its return in the schedule study (169.5) differs by 2.5 from the same configuration in the benchmark (167.0), which is comparable to the 4.3 unit spread across all five Q-learning schedules, and the same schedule ranks 4 of 5 for MC."
+  },
+  {
+   "q": "Is the robustness result a reason to deploy the learned policy?",
+   "a": "No. It is a change of a single quantity made by flipping recorded outcomes, scored on one period of real sessions. It shows that the learned policies lose less than the rule when no-shows rise, in all 10 of 10 configurations, and nothing more."
+  },
+  {
+   "q": "Why does the oracle score more than the learners?",
+   "a": "With 1,500 episodes the high overbooking actions are supported (about 50 visits per pair against 5.0), and the oracle uses +3 or +4 in 12 states. The learners use them in at most 4."
+  },
+  {
+   "q": "Why does the structured model score more than the oracle fitted to ten times as much data?",
+   "a": "The oracle still estimates P(s' | s, a) pair by pair, so with 1,500 days some pairs that the optimum uses remain below the support threshold and the rest carry sampling error. The structured model estimates 26 numbers that every logged session informs and computes the rest from the clinic's rules; its return varies by ±0.01 over 20 data draws."
+  },
+  {
+   "q": "Is the comparison fair to the learners?",
+   "a": "They receive the same logged days, the same solver for DP and the same scoring episodes. What the structured model has in addition is the clinic's rules, which Section 9 lists as a limitation: a clinic that cannot state them cannot use it."
+  },
+  {
+   "q": "Why is the margin over the single session optimiser so small?",
+   "a": "In the default setting the waiting list stays short under both policies (1.83 and 1.67 patients per session), so little is left to plan for, and the optimiser uses each patient's own risk while the structured model uses a band. When the waiting list is under pressure the margin reaches 33.3% (Table 9)."
+  },
+  {
+   "q": "Which parts of the results are real?",
+   "a": "Attendance is real: every patient in a scored session is a recorded appointment and comes exactly when the table says so, and the scoring weeks are never used for learning. The overbooking decisions in the logs, the waiting list and the reward weights are not in the table and are generated or assumed (Section 6.1)."
+  }
+ ]
+}

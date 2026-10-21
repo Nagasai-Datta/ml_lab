@@ -34,7 +34,60 @@ def ttest(a, b):
     return float(d.mean()), 1.96 * float(d.std(ddof=1) / np.sqrt(len(d))), float(stats.ttest_1samp(d, 0).pvalue), int((d > 0).sum())
 
 
-def build():
+# authors, written as an IEEE author block (one column per author) in place of the placeholder line of docx_helper
+AUTHORS = [("M Naga Sai Dattu", "23BCE0757", "marupaka.naga2023@vitstudent.ac.in"),
+           ("Prakrit Bahl", "23BCE0826", "prakrit.bahl2023@vitstudent.ac.in")]
+AFFILIATION = ("School of Computer Science and Engineering (SCOPE)", "Vellore Institute of Technology", "Vellore, India")
+
+
+def author_block(P, authors=AUTHORS, affiliation=AFFILIATION):
+    """Replace docx_helper's '[Author names] | ...' line with a borderless table, one centred column per author:
+    name, registration number, school, institute, city and e-mail, as in the IEEE conference template."""
+    from docx.enum.table import WD_TABLE_ALIGNMENT
+    from docx.enum.text import WD_ALIGN_PARAGRAPH
+    from docx.oxml import OxmlElement
+    from docx.oxml.ns import qn
+    from docx.shared import Cm, Pt
+    doc = P.doc
+    old = next(p for p in doc.paragraphs if p.text.startswith("[Author names]"))
+    tb = doc.add_table(rows=1, cols=len(authors))
+    tb.alignment = WD_TABLE_ALIGNMENT.CENTER
+    borders = OxmlElement("w:tblBorders")
+    for edge in ("top", "left", "bottom", "right", "insideH", "insideV"):
+        e = OxmlElement(f"w:{edge}"); e.set(qn("w:val"), "nil"); borders.append(e)
+    pr = tb._tbl.tblPr                                    # schema order: tblBorders comes before shd, tblLayout, tblCellMar, tblLook
+    after = [c for c in pr if c.tag in {qn("w:shd"), qn("w:tblLayout"), qn("w:tblCellMar"), qn("w:tblLook")}]
+    after[0].addprevious(borders) if after else pr.append(borders)
+    width = Cm(16.4 / len(authors))                       # the full text width, split evenly
+    tb.autofit = False
+    for col in tb.columns:
+        col.width = width
+    for c in pr:
+        if c.tag == qn("w:tblW"):
+            c.set(qn("w:type"), "dxa"); c.set(qn("w:w"), str(int(16.4 / 2.54 * 1440)))
+    mar = OxmlElement("w:tblCellMar")                     # small side padding so the school's name fits on one line
+    for side in ("left", "right"):
+        m = OxmlElement(f"w:{side}"); m.set(qn("w:w"), "28"); m.set(qn("w:type"), "dxa"); mar.append(m)
+    look = [c for c in pr if c.tag == qn("w:tblLook")]
+    look[0].addprevious(mar) if look else pr.append(mar)
+    for cell, (name, reg, mail) in zip(tb.rows[0].cells, authors):
+        cell.width = width
+        lines = [(name, 11, False), (reg, 10, False), (affiliation[0], 10, True), (affiliation[1], 10, True),
+                 (affiliation[2], 10, False), (mail, 10, False)]
+        for i, (text, size, italic) in enumerate(lines):
+            p = cell.paragraphs[0] if i == 0 else cell.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.paragraph_format.space_before = Pt(0)
+            p.paragraph_format.space_after = Pt(8 if i == len(lines) - 1 else 0)
+            p.paragraph_format.line_spacing = 1.0
+            r = p.add_run(text); r.font.size = Pt(size); r.italic = italic
+    old._p.addnext(tb._tbl)
+    old._p.getparent().remove(old._p)
+
+
+def build(short=False):
+    """short=False writes version 3. short=True (paper07_v4.py) writes version 4: the same paper without Appendix A
+    (reviewer questions) and Appendix C (source code); the reproducibility appendix stays and becomes Appendix A."""
     R = json.load(open(os.path.join(D, "results.json")))
     B, Sd, DT, CF = R["benchmark"], R["schedule"], R["data"], R["config"]
     S, meth, cfg = B["summary"], B["methods"], B["config"]
@@ -151,6 +204,7 @@ def build():
     P = Paper("Overbooking Clinic Appointments with Reinforcement Learning: Exploration Schedules, Learning Efficiency and Robustness to Shifts in the No-Show Rate",
               "appointment scheduling; no-show; overbooking; exploration schedule; epsilon-greedy; optimistic initialisation; learning curves; distribution shift; structured model; real appointment data",
               running="Clinic overbooking, exploration and shift", refdict={**REFS, **OURS})
+    author_block(P)
 
     # ================================================================== abstract
     P.abstract(
@@ -299,7 +353,7 @@ def build():
     # ================================================================== 6 Protocol
     P.h1("Experimental protocol")
     P.h2("Data: real sessions")
-    P.p("**Important disclosure.** The first version of this study could not reach the Kaggle website (all requests returned HTTP 403) and ran on a hand-specified simulator. Every result in this version "
+    P.p("**Important disclosure.** Every result in this paper "
         "comes from the real table, and the scoring sessions are never used for learning. The table cannot provide everything the study needs, and the gaps are filled as follows. "
         "(i) It records no overbooking decisions, so the logs are generated by running the behaviour policy of Table 1 over the real learning sessions: the decisions are generated, the attendance is recorded. "
         "(ii) It has no waiting list, so the waiting list of Section 4.2 is simulated. (iii) It has no clinics or slots, so a session is one neighbourhood on one day with 10 regular slots. "
@@ -595,6 +649,16 @@ def build():
         "to the DP solution than MC. Attendance in these results is recorded, but the decisions are generated and the waiting list is simulated, so they are not evidence about real clinics.")
 
     # ================================================================== appendices
+    repro = (f"All results in this paper are produced by `python run_real.py` (shared library: rl_core.py, common.py, ideas.py; data and models: noshow_data.py, real_clinic.py, planner.py), which reads the table from "
+        "data/KaggleV2-May-2016.csv. Random seeds are fixed in the code, so a rerun reproduces every table and figure. Figure files generated by the script: fig_learning, fig_policies, fig_schedules, fig_shift, "
+        "fig_metrics, fig_datasize, fig_convergence and fig_demand; `python run_real.py --figures` redraws them from the stored results.")
+    if short:                                             # version 4: no reviewer questions and no source code
+        P.h1("Appendix A. Reproducibility")
+        P.p(repro)
+        P.refs()
+        path = os.path.join(PAP, "Paper07_v4_real_data_short.docx")
+        P.save(path)
+        return path
     P.h1("Appendix A. Anticipated reviewer questions")
     P.p("The following questions are the ones a reviewer or examiner is most likely to raise. Each answer is tied to a number or figure produced by the code.")
     qas = [
@@ -632,9 +696,7 @@ def build():
         P.p(f"**Q{i}. {q}**")
         P.p(a, indent=True)
     P.h1("Appendix B. Reproducibility")
-    P.p(f"All results in this paper are produced by `python run_real.py` (shared library: rl_core.py, common.py, ideas.py; data and models: noshow_data.py, real_clinic.py, planner.py), which reads the table from "
-        "data/KaggleV2-May-2016.csv. Random seeds are fixed in the code, so a rerun reproduces every table and figure. Figure files generated by the script: fig_learning, fig_policies, fig_schedules, fig_shift, "
-        "fig_metrics, fig_datasize, fig_convergence and fig_demand; `python run_real.py --figures` redraws them from the stored results.")
+    P.p(repro)
     import run_real, planner, real_clinic, noshow_data
     P.h1("Appendix C. Source code of the experiment")
     P.p("For completeness the exact source of the clinic built from real sessions, the experiment functions and the structured model is reproduced below; it is the same code that produced every number and "
